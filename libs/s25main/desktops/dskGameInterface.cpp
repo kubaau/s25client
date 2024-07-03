@@ -662,6 +662,23 @@ bool dskGameInterface::Msg_LeftDown(const MouseCoords& mc)
             }
         }
 
+#ifdef NDEBUG
+        if(isCheatModeOn)
+#endif // !NDEBUG
+        {
+            if(worldViewer.GetNode(cSel).bq >= BuildingQuality::Hut)
+                action_tabs.place_cheat_building = true;
+
+            if(worldViewer.GetNode(cSel).owner)
+                action_tabs.place_cheat_building = false;
+
+            // It seems that in the original game you can only build headquarters in unoccupied territory at least 2
+            // tiles away from any border markers.
+            for(const MapPoint nb : worldViewer.GetNeighbours(cSel))
+                if(worldViewer.GetNode(nb).owner)
+                    action_tabs.place_cheat_building = false;
+        }
+
         // Bisheriges Actionfenster schließen, falls es eins gab
         // aktuelle Mausposition merken, da diese durch das Schließen verändert werden kann
         if(actionwindow)

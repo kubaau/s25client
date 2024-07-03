@@ -13,6 +13,7 @@
 #include "Ware.h"
 #include "addons/const_addons.h"
 #include "buildings/noBuildingSite.h"
+#include "buildings/nobHQ.h"
 #include "buildings/nobHarborBuilding.h"
 #include "buildings/nobMilitary.h"
 #include "buildings/nobUsual.h"
@@ -364,6 +365,17 @@ nobBaseWarehouse* GamePlayer::FindWarehouse(const noRoadNode& start, const T_IsW
     return best;
 }
 
+nobHQ* GamePlayer::GetHQ()
+{
+    const MapPoint& hqPos = GetHQPos();
+    return hqPos.isValid() ? GetGameWorld().GetSpecObj<nobHQ>(hqPos) : nullptr;
+}
+
+const nobHQ* GamePlayer::GetHQ() const
+{
+    return const_cast<GamePlayer*>(this)->GetHQ();
+}
+
 void GamePlayer::AddBuildingSite(noBuildingSite* bldSite)
 {
     RTTR_Assert(bldSite->GetPlayer() == GetPlayerId());
@@ -395,8 +407,13 @@ void GamePlayer::AddBuilding(noBuilding* bld, BuildingType bldType)
         for(noShip* ship : ships)
             ship->NewHarborBuilt(static_cast<nobHarborBuilding*>(bld));
     } else if(bldType == BuildingType::Headquarters)
-        hqPos = bld->GetPos();
-    else if(BuildingProperties::IsMilitary(bldType))
+    {
+        // If there is more than one HQ, keep the original position.
+        if(!hqPos.isValid())
+        {
+            hqPos = bld->GetPos();
+        }
+    } else if(BuildingProperties::IsMilitary(bldType))
     {
         auto* milBld = static_cast<nobMilitary*>(bld);
         // New built? -> Calculate frontier distance
