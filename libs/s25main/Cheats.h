@@ -31,6 +31,7 @@ public:
 
     // RTTR cheats
     void ToggleHumanAIPlayer();
+    void RevealResources(GameWorldView&);
 
 private:
     unsigned char cheatStrIndex;

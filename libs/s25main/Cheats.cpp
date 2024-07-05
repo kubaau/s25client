@@ -13,6 +13,7 @@
 #include "world/GameWorldBase.h"
 #include "world/GameWorldView.h"
 #include "world/GameWorldViewer.h"
+#include "nodeObjs/noSign.h"
 #include "gameTypes/MapNode.h"
 
 Cheats::Cheats()
@@ -114,4 +115,49 @@ void Cheats::ToggleHumanAIPlayer()
         return;
 
     GAMECLIENT.ToggleHumanAIPlayer({AI::Type::Default, AI::Level::Hard});
+}
+
+void Cheats::RevealResources(GameWorldView& gwv)
+{
+    if(!IsCheatModeOn())
+        return;
+
+    GameWorldBase& world = const_cast<GameWorldBase&>(gwv.GetWorld());
+    const auto width = world.GetWidth();
+    const auto height = world.GetHeight();
+
+    for(MapCoord y = 0; y < height; ++y)
+        for(MapCoord x = 0; x < width; ++x)
+        {
+            const MapPoint mp = {x, y};
+
+            const NodalObjectType noType = world.GetNO(mp)->GetType();
+            if(noType != NodalObjectType::Nothing && noType != NodalObjectType::Environment)
+                continue; // don't want to destroy this object to place a sign
+
+            Resource res = world.GetNode(mp).resources;
+
+            switch(res.getType())
+            {
+                // show these
+                case ResourceType::Iron:
+                case ResourceType::Gold:
+                case ResourceType::Coal:
+                case ResourceType::Granite: break;
+
+                // water is typically almost everywhere, don't reveal, continue to next node
+                case ResourceType::Water: continue;
+
+                // show fish as water, why the hell not
+                case ResourceType::Fish: res.setType(ResourceType::Water); break;
+
+                // no resource to reveal, continue to next node
+                default: continue;
+            }
+
+            constexpr auto checkExists = false;
+            world.DestroyNO(mp, checkExists); // safe to destroy because we checked this earlier
+            if(res.getAmount())
+                world.SetNO(mp, new noSign(mp, res));
+        }
 }

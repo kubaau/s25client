@@ -753,7 +753,12 @@ bool dskGameInterface::Msg_KeyDown(const KeyEvent& ke)
             WINDOWMANAGER.ToggleWindow(
               std::make_unique<iwMapDebug>(gwv, game_->world_.IsSinglePlayer() || GAMECLIENT.IsReplayModeOn()));
             return true;
-        case KeyType::F7: CHEATS.ToggleAllVisible(*this); return true;
+        case KeyType::F7:
+            if(ke.alt)
+                CHEATS.RevealResources(gwv);
+            else
+                CHEATS.ToggleAllVisible(*this);
+            return true;
         case KeyType::F8: // Tastaturbelegung
             WINDOWMANAGER.ToggleWindow(std::make_unique<iwTextfile>("keyboardlayout.txt", _("Keyboard layout")));
             return true;
