@@ -113,6 +113,9 @@ BuildingQuality GameWorldViewer::GetBQ(const MapPoint& pt) const
 
 Visibility GameWorldViewer::GetVisibility(const MapPoint pt) const
 {
+    if(isAllVisibleCheatEnabled)
+        return Visibility::Visible;
+
     /// Replaymodus und FoW aus? Dann alles sichtbar
     if(GAMECLIENT.IsReplayModeOn() && GAMECLIENT.IsReplayFOWDisabled())
         return Visibility::Visible;
@@ -142,6 +145,11 @@ const MapNode& GameWorldViewer::GetNode(const MapPoint& pt) const
 MapPoint GameWorldViewer::GetNeighbour(const MapPoint pt, const Direction dir) const
 {
     return GetWorld().GetNeighbour(pt, dir);
+}
+
+void GameWorldViewer::ToggleAllVisibleCheat()
+{
+    isAllVisibleCheatEnabled = !isAllVisibleCheatEnabled;
 }
 
 void GameWorldViewer::RecalcAllColors()

@@ -84,6 +84,8 @@ public:
     /// Get first found ship of this player at that point or nullptr of none
     const noShip* GetShip(MapPoint pt) const;
 
+    void ToggleAllVisibleCheat();
+
     /// Schattierungen (vor allem FoW) neu berechnen
     void RecalcAllColors();
 
@@ -104,6 +106,7 @@ private:
     GameWorldBase& gwb;
     TerrainRenderer tr;
     Subscription evVisibilityChanged, evAltitudeChanged, evRoadConstruction, evBQChanged;
+    bool isAllVisibleCheatEnabled = false;
     NodeMapBase<VisualMapNode> visualNodes;
     /// Max height of any node
     uint8_t maxNodeAltitude_ = 0;

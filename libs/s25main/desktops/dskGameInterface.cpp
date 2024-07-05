@@ -751,6 +751,18 @@ bool dskGameInterface::Msg_KeyDown(const KeyEvent& ke)
             WINDOWMANAGER.ToggleWindow(
               std::make_unique<iwMapDebug>(gwv, game_->world_.IsSinglePlayer() || GAMECLIENT.IsReplayModeOn()));
             return true;
+        case KeyType::F7:
+#ifdef NDEBUG
+            // This is actually the behavior of the original game.
+            // If you enabled cheats, revealed the map and disabled cheats you would be unable to unreveal the map.
+            if(isCheatModeOn)
+#endif // !NDEBUG
+            {
+                worldViewer.ToggleAllVisibleCheat();
+                // The minimap in the original game is not updated immediately, but here this would cause complications.
+                GI_UpdateMapVisibility();
+            }
+            return true;
         case KeyType::F8: // Tastaturbelegung
             WINDOWMANAGER.ToggleWindow(std::make_unique<iwTextfile>("keyboardlayout.txt", _("Keyboard layout")));
             return true;
