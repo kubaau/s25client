@@ -60,7 +60,7 @@ void Cheats::ToggleAllVisible(GameInterface& gi)
 {
     // This is actually the behavior of the original game.
     // If you enabled cheats, revealed the map and disabled cheats you would be unable to unreveal the map.
-    if(!IsCheatModeOnOrDebug())
+    if(!IsCheatModeOn())
         return;
 
     isAllVisible = !isAllVisible;
@@ -104,7 +104,7 @@ void Cheats::PlaceCheatBuilding(GameWorldView& gwv, const MapPoint& mp)
 
 void Cheats::ToggleHumanAIPlayer()
 {
-    if(!IsCheatModeOnOrDebug())
+    if(!IsCheatModeOn())
         return;
 
     if(GAMECLIENT.GetState() != ClientState::Game)
@@ -114,13 +114,4 @@ void Cheats::ToggleHumanAIPlayer()
         return;
 
     GAMECLIENT.ToggleHumanAIPlayer({AI::Type::Default, AI::Level::Hard});
-}
-
-bool Cheats::IsCheatModeOnOrDebug() const noexcept
-{
-#ifdef NDEBUG
-    return IsCheatModeOn();
-#else
-    return true;
-#endif
 }

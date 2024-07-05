@@ -33,8 +33,6 @@ public:
     void ToggleHumanAIPlayer();
 
 private:
-    bool IsCheatModeOnOrDebug() const noexcept;
-
     unsigned char cheatStrIndex;
     bool isCheatModeOn;
     bool isAllVisible;

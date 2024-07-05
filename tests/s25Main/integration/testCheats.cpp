@@ -128,7 +128,6 @@ MOCK_BASE_CLASS(MockGameInterface, GameInterface)
     MOCK_METHOD(GI_BuildRoad, 0)
 };
 
-#ifdef NDEBUG
 BOOST_FIXTURE_TEST_CASE(CannotToggleAllVisible_WhenCheatModeIsNotOn, EmptyWorldFixture1P)
 {
     GameWorldViewer gwv{0, world};
@@ -138,17 +137,6 @@ BOOST_FIXTURE_TEST_CASE(CannotToggleAllVisible_WhenCheatModeIsNotOn, EmptyWorldF
     CHEATS.ToggleAllVisible(gi);
     BOOST_TEST_REQUIRE(CHEATS.IsAllVisible() == false);
 }
-#else
-BOOST_FIXTURE_TEST_CASE(CanAlwaysToggleAllVisible_InDebugBuild, EmptyWorldFixture1P)
-{
-    GameWorldViewer gwv{0, world};
-    MockGameInterface gi;
-
-    MOCK_EXPECT(gi.GI_UpdateMapVisibility).once();
-    CHEATS.ToggleAllVisible(gi);
-    BOOST_TEST_REQUIRE(CHEATS.IsAllVisible() == true);
-}
-#endif
 
 BOOST_FIXTURE_TEST_CASE(CanToggleAllVisible_WhenCheatModeIsOn, EmptyWorldFixture1P)
 {
@@ -174,6 +162,22 @@ BOOST_FIXTURE_TEST_CASE(CanToggleAllVisibleOnAndOff, EmptyWorldFixture1P)
     MOCK_EXPECT(gi.GI_UpdateMapVisibility).once();
     CHEATS.ToggleAllVisible(gi);
     BOOST_TEST_REQUIRE(CHEATS.IsAllVisible() == false);
+}
+
+BOOST_FIXTURE_TEST_CASE(CannotToggleAllVisibleOff_AfterTogglingItOnAndDisablingCheatMode, EmptyWorldFixture1P)
+{
+    GameWorldViewer gwv{0, world};
+    MockGameInterface gi;
+
+    TrackString(gwv, "winter");
+    MOCK_EXPECT(gi.GI_UpdateMapVisibility).once();
+    CHEATS.ToggleAllVisible(gi);
+    BOOST_TEST_REQUIRE(CHEATS.IsAllVisible() == true);
+
+    TrackString(gwv, "winter");
+    MOCK_EXPECT(gi.GI_UpdateMapVisibility).never();
+    CHEATS.ToggleAllVisible(gi);
+    BOOST_TEST_REQUIRE(CHEATS.IsAllVisible() == true);
 }
 
 BOOST_FIXTURE_TEST_CASE(StateCanBeReset, EmptyWorldFixture1P)
