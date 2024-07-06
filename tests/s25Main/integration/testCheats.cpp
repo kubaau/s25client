@@ -97,7 +97,9 @@ BOOST_FIXTURE_TEST_CASE(CheatModeIsTurnedOn_WhenTheFirstCharacterIsRepeated, Emp
 BOOST_FIXTURE_TEST_CASE(CheatModeIsTurnedOn_EvenWhenWrongInputsWereProvidedBefore, EmptyWorldFixture1P)
 {
     TrackString(cheats, "www");
-    cheats.TrackKeyEvent(MakeKeyEvent(KeyType::Down));
+    auto ke = MakeKeyEvent('1');
+    ke.alt = true;
+    cheats.TrackKeyEvent(ke);
     TrackString(cheats, "interwitter");
     BOOST_TEST_REQUIRE(cheats.IsCheatModeOn() == false);
     TrackString(cheats, "winter");

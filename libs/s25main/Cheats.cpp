@@ -37,6 +37,14 @@ void Cheats::TrackKeyEvent(const KeyEvent& ke)
     }
 
     const char c = ke.c;
+
+    if(IsCheatModeOn() && ke.alt && c >= '1' && c <= '6')
+    {
+        cheatStrIndex = 0;
+        return GAMECLIENT.SetGFLengthReq(FramesInfo::milliseconds32_t{50 >> (c - '1')});
+        // 50 -> 25 -> 12 -> 6 -> 3 -> 1
+    }
+
     if(c != cheatStr[cheatStrIndex])
     {
         cheatStrIndex = c == cheatStr.front() ? 1 : 0;
