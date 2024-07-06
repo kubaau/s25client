@@ -307,7 +307,8 @@ bool VideoSDL2::MessageLoop()
                         if(ev.key.keysym.sym >= SDLK_F1 && ev.key.keysym.sym <= SDLK_F12)
                             ke.kt = static_cast<KeyType>(rttr::enum_cast(KeyType::F1) + ev.key.keysym.sym - SDLK_F1);
 
-                        if((SDL_GetModState() & KMOD_ALT) && isdigit(ev.key.keysym.sym))
+                        if((SDL_GetModState() & KMOD_ALT)
+                           && (isdigit(ev.key.keysym.sym) || ev.key.keysym.sym == SDLK_q))
                         {
                             ke.kt = KeyType::Char;
                             ke.c = ev.key.keysym.sym;
