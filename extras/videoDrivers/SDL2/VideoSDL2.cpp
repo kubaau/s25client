@@ -299,19 +299,21 @@ bool VideoSDL2::MessageLoop()
             {
                 KeyEvent ke = {KeyType::Invalid, 0, false, false, false};
 
-                switch(ev.key.keysym.sym)
+                const auto& sym = ev.key.keysym.sym;
+                const auto& mod = ev.key.keysym.mod;
+
+                switch(sym)
                 {
                     default:
                     {
                         // Die 12 F-Tasten
-                        if(ev.key.keysym.sym >= SDLK_F1 && ev.key.keysym.sym <= SDLK_F12)
-                            ke.kt = static_cast<KeyType>(rttr::enum_cast(KeyType::F1) + ev.key.keysym.sym - SDLK_F1);
+                        if(sym >= SDLK_F1 && sym <= SDLK_F12)
+                            ke.kt = static_cast<KeyType>(rttr::enum_cast(KeyType::F1) + sym - SDLK_F1);
 
-                        if((SDL_GetModState() & KMOD_ALT)
-                           && (isdigit(ev.key.keysym.sym) || ev.key.keysym.sym == SDLK_q))
+                        if((mod & KMOD_ALT) && (isdigit(sym) || sym == SDLK_q))
                         {
                             ke.kt = KeyType::Char;
-                            ke.c = ev.key.keysym.sym;
+                            ke.c = sym;
                         }
                     }
                     break;
@@ -332,7 +334,7 @@ bool VideoSDL2::MessageLoop()
                     case SDLK_PRINTSCREEN: ke.kt = KeyType::Print; break;
                     // case SDLK_BACKQUOTE: ev.key.keysym.scancode = '^'; break;
                     case SDLK_v:
-                        if(SDL_GetModState() & KMOD_CTRL)
+                        if(mod & KMOD_CTRL)
                         {
                             HandlePaste();
                             continue;
@@ -344,11 +346,11 @@ bool VideoSDL2::MessageLoop()
                     break;
 
                 /// Strg, Alt, usw gedrückt?
-                if(ev.key.keysym.mod & KMOD_CTRL)
+                if(mod & KMOD_CTRL)
                     ke.ctrl = true;
-                if(ev.key.keysym.mod & KMOD_SHIFT)
+                if(mod & KMOD_SHIFT)
                     ke.shift = true;
-                if(ev.key.keysym.mod & KMOD_ALT)
+                if(mod & KMOD_ALT)
                     ke.alt = true;
 
                 CallBack->Msg_KeyDown(ke);
