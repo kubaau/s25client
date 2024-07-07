@@ -6,19 +6,31 @@
 #include "Cheats.h"
 #include "driver/KeyEvent.h"
 
-CheatKeyTracker::CheatKeyTracker(Cheats& cheats) : cheats_(cheats) {}
+namespace {
+auto MakeCircularBuffer(const std::string& str)
+{
+    return boost::circular_buffer<char>{cbegin(str), cend(str)};
+}
+const auto cheatStr = MakeCircularBuffer("winter");
+} // namespace
+
+CheatKeyTracker::CheatKeyTracker(Cheats& cheats) : cheats_(cheats), lastChars_(cheatStr.size()) {}
 
 void CheatKeyTracker::TrackKeyEvent(const KeyEvent& ke)
 {
-    TrackSpecialKeyEvent(ke) || TrackSpeedKeyEvent(ke) || TrackCharKeyEvent(ke);
+    if(TrackSpecialKeyEvent(ke) || TrackSpeedKeyEvent(ke))
+    {
+        lastChars_.clear();
+        return;
+    }
+
+    TrackCharKeyEvent(ke);
 }
 
 bool CheatKeyTracker::TrackSpecialKeyEvent(const KeyEvent& ke)
 {
     if(ke.kt == KeyType::Char)
         return false;
-
-    cheatStrIndex_ = 0;
 
     switch(ke.kt)
     {
@@ -34,7 +46,6 @@ bool CheatKeyTracker::TrackSpeedKeyEvent(const KeyEvent& ke)
     const char c = ke.c;
     if(ke.alt && c >= '1' && c <= '6')
     {
-        cheatStrIndex_ = 0;
         cheats_.SetGameSpeed(c - '1');
         return true;
     }
@@ -47,21 +58,11 @@ bool CheatKeyTracker::TrackCharKeyEvent(const KeyEvent& ke)
     // interruptions. For example, clicking CTRL (or any other button) after "w" would mean you have to retype "winter"
     // from scratch. RTTR doesn't track some keystrokes this way, so you can type "w", then CTRL, then "inter" and
     // cheats will be enabled, but typing "waaainter" or "w" F3 "inter" will not work (see tests).
-    constexpr auto cheatStr = "winter";
-    static_assert(cheatStr[0], "cheatStr must not be empty");
 
-    const char c = ke.c;
-    if(c != cheatStr[cheatStrIndex_])
-    {
-        cheatStrIndex_ = c == cheatStr[0] ? 1 : 0; // if 'w' then index = 1
-        return true;
-    }
+    lastChars_.push_back(ke.c);
 
-    if(!cheatStr[++cheatStrIndex_])
-    {
+    if(lastChars_ == cheatStr)
         cheats_.ToggleCheatMode();
-        cheatStrIndex_ = 0;
-    }
 
     return true;
 }

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <cstdint>
+#include <boost/circular_buffer.hpp>
 
 class Cheats;
 struct KeyEvent;
@@ -46,5 +46,5 @@ private:
     bool TrackCharKeyEvent(const KeyEvent& ke);
 
     Cheats& cheats_;
-    uint8_t cheatStrIndex_ = 0;
+    boost::circular_buffer<char> lastChars_;
 };

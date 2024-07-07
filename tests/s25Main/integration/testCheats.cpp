@@ -69,6 +69,12 @@ BOOST_FIXTURE_TEST_CASE(CheatModeCanBeTurnedOnAndOffRepeatedly, EmptyWorldFixtur
     BOOST_TEST_REQUIRE(cheats.IsCheatModeOn() == false);
 }
 
+BOOST_FIXTURE_TEST_CASE(CheatModeIsNotTurnedOn_WhenIncomplete, EmptyWorldFixture1P)
+{
+    TrackString(cheats, "winte");
+    BOOST_TEST_REQUIRE(cheats.IsCheatModeOn() == false);
+}
+
 BOOST_FIXTURE_TEST_CASE(CheatModeIsNotTurnedOn_WhenInterruptedByAnotherKeyType, EmptyWorldFixture1P)
 {
     TrackString(cheats, "win");
@@ -86,6 +92,12 @@ BOOST_FIXTURE_TEST_CASE(CheatModeIsNotTurnedOn_WhenInterruptedByAnotherLetter, E
 BOOST_FIXTURE_TEST_CASE(CheatModeIsNotTurnedOn_WhenOrderOfCharactersIsWrong, EmptyWorldFixture1P)
 {
     TrackString(cheats, "winetr");
+    BOOST_TEST_REQUIRE(cheats.IsCheatModeOn() == false);
+}
+
+BOOST_FIXTURE_TEST_CASE(CheatModeIsNotTurnedOn_WhenOrderOfCharactersIsWrong_Wraparound, EmptyWorldFixture1P)
+{
+    TrackString(cheats, "rwinte");
     BOOST_TEST_REQUIRE(cheats.IsCheatModeOn() == false);
 }
 
