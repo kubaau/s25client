@@ -20,6 +20,31 @@ void Cheats::TrackKeyEvent(const KeyEvent& ke)
     TrackSpecialKeyEvent(ke) || TrackSpeedKeyEvent(ke) || TrackCharKeyEvent(ke);
 }
 
+bool Cheats::CanPlaceCheatBuilding(const MapPoint& mp) const
+{
+    if(!IsCheatModeOn())
+        return false;
+
+    // It seems that in the original game you can only build headquarters in unoccupied territory at least 2 nodes
+    // away from any border markers and that it doesn't need more bq than a hut.
+    const MapNode& node = world.GetNode(mp);
+    return !node.owner && !world.IsAnyNeighborOwned(mp) && node.bq >= BuildingQuality::Hut;
+}
+
+void Cheats::PlaceCheatBuilding(const MapPoint& mp, const GamePlayer& player)
+{
+    if(!CanPlaceCheatBuilding(mp))
+        return;
+
+    // The new HQ will have default resources.
+    // In the original game, new HQs created in the Roman campaign had no resources.
+    constexpr auto checkExists = false;
+    world.DestroyNO(mp, checkExists); // if CanPlaceCheatBuilding is true then this must be safe to destroy
+    const nobHQ* hq = player.GetHQ();
+    BuildingFactory::CreateBuilding(world, BuildingType::Headquarters, mp, player.GetPlayerId(), player.nation,
+                                    hq ? hq->IsTent() : false);
+}
+
 bool Cheats::TrackSpecialKeyEvent(const KeyEvent& ke)
 {
     if(ke.kt == KeyType::Char)
@@ -71,38 +96,6 @@ bool Cheats::TrackCharKeyEvent(const KeyEvent& ke)
         cheatStrIndex = 0;
     }
     return true;
-}
-
-bool Cheats::CanPlaceCheatBuilding(const MapPoint& mp) const
-{
-    // The new HQ will have default resources.
-    // In the original game, new HQs created in the Roman campaign had no resources.
-
-    if(!IsCheatModeOn())
-        return false;
-
-    if(world.GetNode(mp).owner)
-        return false;
-
-    // It seems that in the original game you can only build headquarters in unoccupied territory at least 2 tiles
-    // away from any border markers.
-    for(const MapPoint& nb : world.GetNeighbours(mp))
-        if(world.GetNode(nb).owner)
-            return false;
-
-    return world.GetNode(mp).bq >= BuildingQuality::Hut;
-}
-
-void Cheats::PlaceCheatBuilding(const MapPoint& mp, const GamePlayer& player)
-{
-    if(!CanPlaceCheatBuilding(mp))
-        return;
-
-    constexpr auto checkExists = false;
-    world.DestroyNO(mp, checkExists); // if CanPlaceCheatBuilding is true then this must be safe to destroy
-    const nobHQ* hq = player.GetHQ();
-    BuildingFactory::CreateBuilding(world, BuildingType::Headquarters, mp, player.GetPlayerId(), player.nation,
-                                    hq ? hq->IsTent() : false);
 }
 
 void Cheats::ToggleAllVisible()

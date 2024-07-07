@@ -95,6 +95,8 @@ public:
     /// Check if a flag is at a neighbour node
     bool IsFlagAround(const MapPoint& pt) const;
 
+    bool IsAnyNeighborOwned(const MapPoint& pt) const;
+
     /// Berechnet BQ bei einer gebauten Stra�e
     void RecalcBQForRoad(MapPoint pt);
     /// Pr�ft, ob sich in unmittelbarer N�he (im Radius von 4) Milit�rgeb�ude befinden
