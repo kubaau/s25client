@@ -27,7 +27,7 @@ public:
     void PlaceCheatBuilding(GameWorldView&, const MapPoint&);
 
 private:
-    std::string currentCheatStr;
+    unsigned char cheatStrIndex = 0;
     bool isCheatModeOn = false;
     bool isAllVisible = false;
 };

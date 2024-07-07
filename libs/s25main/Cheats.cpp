@@ -16,32 +16,30 @@
 
 void Cheats::TrackKeyEvent(const KeyEvent& ke, const GameWorldViewer& viewer)
 {
-    static const std::string cheatStr = "winter";
     // In the original game, you would have to press the keys for the cheat string in the exact order without any
     // interruptions. For example, clicking CTRL (or any other button) after "w" would mean you have to retype "winter"
     // from scratch. RTTR doesn't track some keystrokes this way, so you can type "w", then CTRL, then "inter" and
     // cheats will be enabled, but typing "waaainter" or "w" F3 "inter" will not work.
+    static const std::string cheatStr = "winter";
+    RTTR_Assert(!cheatStr.empty());
 
     if(ke.kt != KeyType::Char)
     {
-        currentCheatStr.clear();
+        cheatStrIndex = 0;
         return;
     }
 
     const char c = ke.c;
-    currentCheatStr += c;
-    if(currentCheatStr == cheatStr)
+    if(c != cheatStr[cheatStrIndex])
+    {
+        cheatStrIndex = c == cheatStr.front() ? 1 : 0;
+        return;
+    }
+
+    if(++cheatStrIndex == cheatStr.length())
     {
         isCheatModeOn = !isCheatModeOn;
-        currentCheatStr.clear();
-    } else if(cheatStr.find(currentCheatStr) != 0)
-    {
-        currentCheatStr.clear();
-
-        if(c == cheatStr.front()) // wwwinter should still work
-        {
-            currentCheatStr += ke.c;
-        }
+        cheatStrIndex = 0;
     }
 }
 
