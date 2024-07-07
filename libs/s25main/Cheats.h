@@ -6,7 +6,6 @@
 
 #include "gameTypes/MapCoordinates.h"
 
-class GameInterface;
 class GamePlayer;
 class GameWorldBase;
 struct KeyEvent;
@@ -20,17 +19,19 @@ public:
     bool IsCheatModeOn() const noexcept { return isCheatModeOn; }
 
     // Classic cheats
-    void ToggleAllVisible(GameInterface&);
     bool IsAllVisible() const noexcept { return isAllVisible; }
 
     bool CanPlaceCheatBuilding(const MapPoint&) const;
     void PlaceCheatBuilding(const MapPoint&, const GamePlayer&);
 
-    // RTTR cheats
-    void ToggleHumanAIPlayer();
-    void RevealResources();
-
 private:
+    // Classic cheats
+    void ToggleAllVisible();
+
+    // RTTR cheats
+    void RevealResources();
+    void ToggleHumanAIPlayer();
+
     GameWorldBase& world;
     unsigned char cheatStrIndex = 0;
     bool isCheatModeOn = false;

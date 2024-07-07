@@ -720,9 +720,7 @@ bool dskGameInterface::Msg_RightUp(const MouseCoords& /*mc*/) //-V524
  */
 bool dskGameInterface::Msg_KeyDown(const KeyEvent& ke)
 {
-    Cheats& cheats = game_->world_.GetCheats();
-
-    cheats.TrackKeyEvent(ke);
+    game_->world_.GetCheats().TrackKeyEvent(ke);
 
     switch(ke.kt)
     {
@@ -755,19 +753,12 @@ bool dskGameInterface::Msg_KeyDown(const KeyEvent& ke)
             WINDOWMANAGER.ToggleWindow(
               std::make_unique<iwMapDebug>(gwv, game_->world_.IsSinglePlayer() || GAMECLIENT.IsReplayModeOn()));
             return true;
-        case KeyType::F7:
-            if(ke.alt)
-                cheats.RevealResources();
-            else
-                cheats.ToggleAllVisible(*this);
-            return true;
         case KeyType::F8: // Tastaturbelegung
             WINDOWMANAGER.ToggleWindow(std::make_unique<iwTextfile>("keyboardlayout.txt", _("Keyboard layout")));
             return true;
         case KeyType::F9: // Readme
             WINDOWMANAGER.ToggleWindow(std::make_unique<iwTextfile>("readme.txt", _("Readme!")));
             return true;
-        case KeyType::F10: cheats.ToggleHumanAIPlayer(); return true;
         case KeyType::F11: // Music player (midi files)
             WINDOWMANAGER.ToggleWindow(std::make_unique<iwMusicPlayer>());
             return true;

@@ -27,7 +27,13 @@ void Cheats::TrackKeyEvent(const KeyEvent& ke)
     if(ke.kt != KeyType::Char)
     {
         cheatStrIndex = 0;
-        return;
+
+        switch(ke.kt)
+        {
+            case KeyType::F7: return ke.alt ? RevealResources() : ToggleAllVisible();
+            case KeyType::F10: return ToggleHumanAIPlayer();
+            default: return;
+        }
     }
 
     const char c = ke.c;
@@ -42,18 +48,6 @@ void Cheats::TrackKeyEvent(const KeyEvent& ke)
         isCheatModeOn = !isCheatModeOn;
         cheatStrIndex = 0;
     }
-}
-
-void Cheats::ToggleAllVisible(GameInterface& gi)
-{
-    // This is actually the behavior of the original game.
-    // If you enabled cheats, revealed the map and disabled cheats you would be unable to unreveal the map.
-    if(!IsCheatModeOn())
-        return;
-
-    isAllVisible = !isAllVisible;
-    // The minimap in the original game is not updated immediately, but here this would cause complications.
-    gi.GI_UpdateMapVisibility();
 }
 
 bool Cheats::CanPlaceCheatBuilding(const MapPoint& mp) const
@@ -88,18 +82,17 @@ void Cheats::PlaceCheatBuilding(const MapPoint& mp, const GamePlayer& player)
                                     hq ? hq->IsTent() : false);
 }
 
-void Cheats::ToggleHumanAIPlayer()
+void Cheats::ToggleAllVisible()
 {
+    // This is actually the behavior of the original game.
+    // If you enabled cheats, revealed the map and disabled cheats you would be unable to unreveal the map.
     if(!IsCheatModeOn())
         return;
 
-    if(GAMECLIENT.GetState() != ClientState::Game)
-        return;
-
-    if(GAMECLIENT.IsReplayModeOn())
-        return;
-
-    GAMECLIENT.ToggleHumanAIPlayer({AI::Type::Default, AI::Level::Hard});
+    isAllVisible = !isAllVisible;
+    // The minimap in the original game is not updated immediately, but here this would cause complications.
+    if(GameInterface* gi = world.GetGameInterface())
+        gi->GI_UpdateMapVisibility();
 }
 
 void Cheats::RevealResources()
@@ -144,4 +137,18 @@ void Cheats::RevealResources()
             if(res.getAmount())
                 world.SetNO(mp, new noSign(mp, res));
         }
+}
+
+void Cheats::ToggleHumanAIPlayer()
+{
+    if(!IsCheatModeOn())
+        return;
+
+    if(GAMECLIENT.GetState() != ClientState::Game)
+        return;
+
+    if(GAMECLIENT.IsReplayModeOn())
+        return;
+
+    GAMECLIENT.ToggleHumanAIPlayer({AI::Type::Default, AI::Level::Hard});
 }

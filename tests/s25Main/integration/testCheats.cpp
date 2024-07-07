@@ -121,48 +121,52 @@ MOCK_BASE_CLASS(MockGameInterface, GameInterface)
 BOOST_FIXTURE_TEST_CASE(CannotToggleAllVisible_WhenCheatModeIsNotOn, EmptyWorldFixture1P)
 {
     MockGameInterface gi;
+    world.SetGameInterface(&gi);
 
     MOCK_EXPECT(gi.GI_UpdateMapVisibility).never();
-    cheats.ToggleAllVisible(gi);
+    cheats.TrackKeyEvent(MakeKeyEvent(KeyType::F7));
     BOOST_TEST_REQUIRE(cheats.IsAllVisible() == false);
 }
 
 BOOST_FIXTURE_TEST_CASE(CanToggleAllVisible_WhenCheatModeIsOn, EmptyWorldFixture1P)
 {
     MockGameInterface gi;
+    world.SetGameInterface(&gi);
 
     TrackString(cheats, "winter");
     MOCK_EXPECT(gi.GI_UpdateMapVisibility).once();
-    cheats.ToggleAllVisible(gi);
+    cheats.TrackKeyEvent(MakeKeyEvent(KeyType::F7));
     BOOST_TEST_REQUIRE(cheats.IsAllVisible() == true);
 }
 
 BOOST_FIXTURE_TEST_CASE(CanToggleAllVisibleOnAndOff, EmptyWorldFixture1P)
 {
     MockGameInterface gi;
+    world.SetGameInterface(&gi);
 
     TrackString(cheats, "winter");
     MOCK_EXPECT(gi.GI_UpdateMapVisibility).once();
-    cheats.ToggleAllVisible(gi);
+    cheats.TrackKeyEvent(MakeKeyEvent(KeyType::F7));
     BOOST_TEST_REQUIRE(cheats.IsAllVisible() == true);
 
     MOCK_EXPECT(gi.GI_UpdateMapVisibility).once();
-    cheats.ToggleAllVisible(gi);
+    cheats.TrackKeyEvent(MakeKeyEvent(KeyType::F7));
     BOOST_TEST_REQUIRE(cheats.IsAllVisible() == false);
 }
 
 BOOST_FIXTURE_TEST_CASE(CannotToggleAllVisibleOff_AfterTogglingItOnAndDisablingCheatMode, EmptyWorldFixture1P)
 {
     MockGameInterface gi;
+    world.SetGameInterface(&gi);
 
     TrackString(cheats, "winter");
     MOCK_EXPECT(gi.GI_UpdateMapVisibility).once();
-    cheats.ToggleAllVisible(gi);
+    cheats.TrackKeyEvent(MakeKeyEvent(KeyType::F7));
     BOOST_TEST_REQUIRE(cheats.IsAllVisible() == true);
 
     TrackString(cheats, "winter");
     MOCK_EXPECT(gi.GI_UpdateMapVisibility).never();
-    cheats.ToggleAllVisible(gi);
+    cheats.TrackKeyEvent(MakeKeyEvent(KeyType::F7));
     BOOST_TEST_REQUIRE(cheats.IsAllVisible() == true);
 }
 
