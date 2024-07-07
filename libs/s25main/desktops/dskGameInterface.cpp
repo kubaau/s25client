@@ -720,6 +720,8 @@ bool dskGameInterface::Msg_RightUp(const MouseCoords& /*mc*/) //-V524
  */
 bool dskGameInterface::Msg_KeyDown(const KeyEvent& ke)
 {
+    CHEATS.TrackKeyEvent(ke, worldViewer);
+
     switch(ke.kt)
     {
         default: break;
@@ -771,29 +773,6 @@ bool dskGameInterface::Msg_KeyDown(const KeyEvent& ke)
         case KeyType::F12: // Optionsfenster
             WINDOWMANAGER.ToggleWindow(std::make_unique<iwOptionsWindow>(gwv.GetSoundMgr()));
             return true;
-    }
-
-    static std::string winterCheat = "winter";
-    switch(ke.c)
-    {
-        // TODO: fix this logic (e.g. waaainter)
-        case 'w':
-        case 'i':
-        case 'n':
-        case 't':
-        case 'e':
-        case 'r':
-            curCheatTxt += char(ke.c);
-            if(winterCheat.find(curCheatTxt) == 0)
-            {
-                if(curCheatTxt == winterCheat)
-                {
-                    CHEATS.ToggleCheatMode();
-                    curCheatTxt.clear();
-                }
-            } else
-                curCheatTxt.clear();
-            break;
     }
 
     switch(ke.c)

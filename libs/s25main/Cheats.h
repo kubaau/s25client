@@ -10,11 +10,13 @@
 class GameInterface;
 class GameWorldView;
 class GameWorldViewer;
+struct KeyEvent;
 
 class Cheats : public Singleton<Cheats>
 {
 public:
-    void ToggleCheatMode() { isCheatModeOn = !isCheatModeOn; }
+    void TrackKeyEvent(const KeyEvent&, const GameWorldViewer&);
+
     bool IsCheatModeOn() const noexcept { return isCheatModeOn; }
     bool IsCheatModeOnOrDebug() const noexcept;
 
@@ -25,6 +27,7 @@ public:
     void PlaceCheatBuilding(GameWorldView&, const MapPoint&);
 
 private:
+    std::string currentCheatStr;
     bool isCheatModeOn = false;
     bool isAllVisible = false;
 };
