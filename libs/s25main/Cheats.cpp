@@ -3,21 +3,50 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "Cheats.h"
-
+#include "CheatKeyTracker.h"
 #include "GameInterface.h"
 #include "GamePlayer.h"
 #include "buildings/nobHQ.h"
-#include "driver/KeyEvent.h"
 #include "factories/BuildingFactory.h"
 #include "network/GameClient.h"
 #include "world/GameWorldBase.h"
 #include "nodeObjs/noSign.h"
 
-Cheats::Cheats(GameWorldBase& world) : world_(world) {}
+Cheats::Cheats(GameWorldBase& world) : keyTracker_(std::make_unique<CheatKeyTracker>(*this)), world_(world) {}
+
+Cheats::~Cheats() = default;
 
 void Cheats::TrackKeyEvent(const KeyEvent& ke)
 {
-    TrackSpecialKeyEvent(ke) || TrackSpeedKeyEvent(ke) || TrackCharKeyEvent(ke);
+    keyTracker_->TrackKeyEvent(ke);
+}
+
+void Cheats::ToggleCheatMode()
+{
+    isCheatModeOn_ = !isCheatModeOn_;
+}
+
+void Cheats::SetGameSpeed(uint8_t speedIndex)
+{
+    if(!IsCheatModeOn())
+        return;
+
+    constexpr auto gfLengthInMs = 50;
+    GAMECLIENT.SetGFLengthReq(FramesInfo::milliseconds32_t{gfLengthInMs >> speedIndex});
+    // 50 -> 25 -> 12 -> 6 -> 3 -> 1
+}
+
+void Cheats::ToggleAllVisible()
+{
+    // This is actually the behavior of the original game.
+    // If you enabled cheats, revealed the map and disabled cheats you would be unable to unreveal the map.
+    if(!IsCheatModeOn())
+        return;
+
+    isAllVisible_ = !isAllVisible_;
+    // The minimap in the original game is not updated immediately, but here this would cause complications.
+    if(GameInterface* gi = world_.GetGameInterface())
+        gi->GI_UpdateMapVisibility();
 }
 
 bool Cheats::CanPlaceCheatBuilding(const MapPoint& mp) const
@@ -45,78 +74,18 @@ void Cheats::PlaceCheatBuilding(const MapPoint& mp, const GamePlayer& player)
                                     hq ? hq->IsTent() : false);
 }
 
-bool Cheats::TrackSpecialKeyEvent(const KeyEvent& ke)
-{
-    if(ke.kt == KeyType::Char)
-        return false;
-
-    cheatStrIndex_ = 0;
-
-    switch(ke.kt)
-    {
-        case KeyType::F7: ke.alt ? RevealResources() : ToggleAllVisible(); break;
-        case KeyType::F10: ToggleHumanAIPlayer(); break;
-        default: break;
-    }
-    return true;
-}
-
-bool Cheats::TrackSpeedKeyEvent(const KeyEvent& ke)
-{
-    const char c = ke.c;
-    if(ke.alt && c >= '1' && c <= '6')
-    {
-        cheatStrIndex_ = 0;
-        SetGameSpeed(c);
-        return true;
-    }
-    return false;
-}
-
-bool Cheats::TrackCharKeyEvent(const KeyEvent& ke)
-{
-    // In the original game, you would have to press the keys for the cheat string in the exact order without any
-    // interruptions. For example, clicking CTRL (or any other button) after "w" would mean you have to retype "winter"
-    // from scratch. RTTR doesn't track some keystrokes this way, so you can type "w", then CTRL, then "inter" and
-    // cheats will be enabled, but typing "waaainter" or "w" F3 "inter" will not work (see tests).
-    static const std::string cheatStr = "winter";
-    RTTR_Assert(!cheatStr.empty());
-
-    const char c = ke.c;
-    if(c != cheatStr[cheatStrIndex_])
-    {
-        cheatStrIndex_ = c == cheatStr.front() ? 1 : 0; // if 'w' then index = 1
-        return true;
-    }
-
-    if(++cheatStrIndex_ == cheatStr.length())
-    {
-        isCheatModeOn_ = !isCheatModeOn_;
-        cheatStrIndex_ = 0;
-    }
-    return true;
-}
-
-void Cheats::ToggleAllVisible()
-{
-    // This is actually the behavior of the original game.
-    // If you enabled cheats, revealed the map and disabled cheats you would be unable to unreveal the map.
-    if(!IsCheatModeOn())
-        return;
-
-    isAllVisible_ = !isAllVisible_;
-    // The minimap in the original game is not updated immediately, but here this would cause complications.
-    if(GameInterface* gi = world_.GetGameInterface())
-        gi->GI_UpdateMapVisibility();
-}
-
-void Cheats::SetGameSpeed(char c)
+void Cheats::ToggleHumanAIPlayer()
 {
     if(!IsCheatModeOn())
         return;
 
-    // 50 -> 25 -> 12 -> 6 -> 3 -> 1
-    GAMECLIENT.SetGFLengthReq(FramesInfo::milliseconds32_t{50 >> (c - '1')});
+    if(GAMECLIENT.GetState() != ClientState::Game)
+        return;
+
+    if(GAMECLIENT.IsReplayModeOn())
+        return;
+
+    GAMECLIENT.ToggleHumanAIPlayer({AI::Type::Default, AI::Level::Hard});
 }
 
 void Cheats::RevealResources()
@@ -161,18 +130,4 @@ void Cheats::RevealResources()
             if(res.getAmount())
                 world_.SetNO(mp, new noSign(mp, res));
         }
-}
-
-void Cheats::ToggleHumanAIPlayer()
-{
-    if(!IsCheatModeOn())
-        return;
-
-    if(GAMECLIENT.GetState() != ClientState::Game)
-        return;
-
-    if(GAMECLIENT.IsReplayModeOn())
-        return;
-
-    GAMECLIENT.ToggleHumanAIPlayer({AI::Type::Default, AI::Level::Hard});
 }
