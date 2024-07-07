@@ -14,6 +14,7 @@ BOOST_AUTO_TEST_SUITE(CheatsTests)
 
 namespace {
 using EmptyWorldFixture1P = WorldFixture<CreateEmptyWorld, 1>;
+using EmptyWorldFixture2P = WorldFixture<CreateEmptyWorld, 2>;
 
 KeyEvent MakeKeyEvent(unsigned c)
 {
@@ -40,6 +41,12 @@ BOOST_FIXTURE_TEST_CASE(CheatModeCanBeTurnedOn, EmptyWorldFixture1P)
 {
     TrackString(cheats, "winter");
     BOOST_TEST_REQUIRE(cheats.IsCheatModeOn() == true);
+}
+
+BOOST_FIXTURE_TEST_CASE(CheatModeCannotBeTurnedOn_InMultiplayer, EmptyWorldFixture2P)
+{
+    TrackString(cheats, "winter");
+    BOOST_TEST_REQUIRE(cheats.IsCheatModeOn() == false);
 }
 
 BOOST_FIXTURE_TEST_CASE(CheatModeCanBeTurnedOff, EmptyWorldFixture1P)

@@ -18,6 +18,11 @@ Cheats::~Cheats() = default;
 
 void Cheats::TrackKeyEvent(const KeyEvent& ke)
 {
+    // It is still possible to use these cheats in multiplayer if you remove this check and rebuild from source, as long
+    // as the multiplayer game can be started with that hacked build.
+    if(!world_.IsSinglePlayer())
+        return;
+
     keyTracker_->TrackKeyEvent(ke);
 }
 
