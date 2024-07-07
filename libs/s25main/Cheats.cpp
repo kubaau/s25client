@@ -17,38 +17,52 @@ Cheats::Cheats(GameWorldBase& world) : world(world) {}
 
 void Cheats::TrackKeyEvent(const KeyEvent& ke)
 {
+    TrackSpecialKeyEvent(ke) || TrackSpeedKeyEvent(ke) || TrackCharKeyEvent(ke);
+}
+
+bool Cheats::TrackSpecialKeyEvent(const KeyEvent& ke)
+{
+    if(ke.kt == KeyType::Char)
+        return false;
+
+    cheatStrIndex = 0;
+
+    switch(ke.kt)
+    {
+        case KeyType::F7: ke.alt ? RevealResources() : ToggleAllVisible(); break;
+        case KeyType::F10: ToggleHumanAIPlayer(); break;
+        default: break;
+    }
+    return true;
+}
+
+bool Cheats::TrackSpeedKeyEvent(const KeyEvent& ke)
+{
+    const char c = ke.c;
+    if(ke.alt && c >= '1' && c <= '6')
+    {
+        cheatStrIndex = 0;
+        SetGameSpeed(c);
+        return true;
+    }
+    return false;
+}
+
+bool Cheats::TrackCharKeyEvent(const KeyEvent& ke)
+{
     // In the original game, you would have to press the keys for the cheat string in the exact order without any
     // interruptions. For example, clicking CTRL (or any other button) after "w" would mean you have to retype "winter"
     // from scratch. RTTR doesn't track some keystrokes this way, so you can type "w", then CTRL, then "inter" and
-    // cheats will be enabled, but typing "waaainter" or "w" F3 "inter" will not work.
+    // cheats will be enabled, but typing "waaainter" or "w" F3 "inter" will not work (see tests).
     static const std::string cheatStr = "winter";
     RTTR_Assert(!cheatStr.empty());
 
-    if(ke.kt != KeyType::Char)
-    {
-        cheatStrIndex = 0;
-
-        switch(ke.kt)
-        {
-            case KeyType::F7: return ke.alt ? RevealResources() : ToggleAllVisible();
-            case KeyType::F10: return ToggleHumanAIPlayer();
-            default: return;
-        }
-    }
-
     const char c = ke.c;
-
-    if(IsCheatModeOn() && ke.alt && c >= '1' && c <= '6')
-    {
-        cheatStrIndex = 0;
-        return GAMECLIENT.SetGFLengthReq(FramesInfo::milliseconds32_t{50 >> (c - '1')});
-        // 50 -> 25 -> 12 -> 6 -> 3 -> 1
-    }
 
     if(c != cheatStr[cheatStrIndex])
     {
-        cheatStrIndex = c == cheatStr.front() ? 1 : 0;
-        return;
+        cheatStrIndex = c == cheatStr.front() ? 1 : 0; // if 'w' then index = 1
+        return true;
     }
 
     if(++cheatStrIndex == cheatStr.length())
@@ -56,6 +70,7 @@ void Cheats::TrackKeyEvent(const KeyEvent& ke)
         isCheatModeOn = !isCheatModeOn;
         cheatStrIndex = 0;
     }
+    return true;
 }
 
 bool Cheats::CanPlaceCheatBuilding(const MapPoint& mp) const
@@ -101,6 +116,15 @@ void Cheats::ToggleAllVisible()
     // The minimap in the original game is not updated immediately, but here this would cause complications.
     if(GameInterface* gi = world.GetGameInterface())
         gi->GI_UpdateMapVisibility();
+}
+
+void Cheats::SetGameSpeed(char c)
+{
+    if(!IsCheatModeOn())
+        return;
+
+    // 50 -> 25 -> 12 -> 6 -> 3 -> 1
+    GAMECLIENT.SetGFLengthReq(FramesInfo::milliseconds32_t{50 >> (c - '1')});
 }
 
 void Cheats::RevealResources()

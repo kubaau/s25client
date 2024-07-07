@@ -25,8 +25,13 @@ public:
     void PlaceCheatBuilding(const MapPoint&, const GamePlayer&);
 
 private:
+    bool TrackSpecialKeyEvent(const KeyEvent&);
+    bool TrackSpeedKeyEvent(const KeyEvent&);
+    bool TrackCharKeyEvent(const KeyEvent&);
+
     // Classic cheats
     void ToggleAllVisible();
+    void SetGameSpeed(char);
 
     // RTTR cheats
     void RevealResources();
