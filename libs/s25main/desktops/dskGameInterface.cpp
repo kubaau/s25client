@@ -760,13 +760,7 @@ bool dskGameInterface::Msg_KeyDown(const KeyEvent& ke)
         case KeyType::F9: // Readme
             WINDOWMANAGER.ToggleWindow(std::make_unique<iwTextfile>("readme.txt", _("Readme!")));
             return true;
-        case KeyType::F10:
-        {
-            if(GAMECLIENT.GetState() == ClientState::Game && CHEATS.IsCheatModeOnOrDebug()
-               && !GAMECLIENT.IsReplayModeOn())
-                GAMECLIENT.ToggleHumanAIPlayer(AI::Info(AI::Type::Default, AI::Level::Easy));
-            return true;
-        }
+        case KeyType::F10: CHEATS.ToggleHumanAIPlayer(); return true;
         case KeyType::F11: // Music player (midi files)
             WINDOWMANAGER.ToggleWindow(std::make_unique<iwMusicPlayer>());
             return true;

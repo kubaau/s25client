@@ -20,17 +20,21 @@ public:
     void Reset();
 
     void TrackKeyEvent(const KeyEvent&, const GameWorldViewer&);
-
     bool IsCheatModeOn() const noexcept { return isCheatModeOn; }
-    bool IsCheatModeOnOrDebug() const noexcept;
 
+    // Classic cheats
     void ToggleAllVisible(GameInterface&);
     bool IsAllVisible() const noexcept { return isAllVisible; }
 
     bool CanPlaceCheatBuilding(const GameWorldViewer&, const MapPoint&) const;
     void PlaceCheatBuilding(GameWorldView&, const MapPoint&);
 
+    // RTTR cheats
+    void ToggleHumanAIPlayer();
+
 private:
+    bool IsCheatModeOnOrDebug() const noexcept;
+
     unsigned char cheatStrIndex;
     bool isCheatModeOn;
     bool isAllVisible;

@@ -9,6 +9,7 @@
 #include "buildings/nobHQ.h"
 #include "driver/KeyEvent.h"
 #include "factories/BuildingFactory.h"
+#include "network/GameClient.h"
 #include "world/GameWorldBase.h"
 #include "world/GameWorldView.h"
 #include "world/GameWorldViewer.h"
@@ -55,15 +56,6 @@ void Cheats::TrackKeyEvent(const KeyEvent& ke, const GameWorldViewer& viewer)
     }
 }
 
-bool Cheats::IsCheatModeOnOrDebug() const noexcept
-{
-#ifdef NDEBUG
-    return IsCheatModeOn();
-#else
-    return true;
-#endif
-}
-
 void Cheats::ToggleAllVisible(GameInterface& gi)
 {
     // This is actually the behavior of the original game.
@@ -108,4 +100,27 @@ void Cheats::PlaceCheatBuilding(GameWorldView& gwv, const MapPoint& mp)
     const nobHQ* hq = player.GetHQ();
     BuildingFactory::CreateBuilding(world, BuildingType::Headquarters, mp, player.GetPlayerId(), player.nation,
                                     hq ? hq->IsTent() : false);
+}
+
+void Cheats::ToggleHumanAIPlayer()
+{
+    if(!IsCheatModeOnOrDebug())
+        return;
+
+    if(GAMECLIENT.GetState() != ClientState::Game)
+        return;
+
+    if(GAMECLIENT.IsReplayModeOn())
+        return;
+
+    GAMECLIENT.ToggleHumanAIPlayer({AI::Type::Default, AI::Level::Hard});
+}
+
+bool Cheats::IsCheatModeOnOrDebug() const noexcept
+{
+#ifdef NDEBUG
+    return IsCheatModeOn();
+#else
+    return true;
+#endif
 }
