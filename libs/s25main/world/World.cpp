@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "world/World.h"
+#include "Cheats.h"
 #include "nodeObjs/noFlag.h"
 #include "nodeObjs/noNothing.h"
 #if RTTR_ENABLE_ASSERTS
@@ -35,6 +36,9 @@ void World::Init(const MapExtent& mapSize, DescIdx<LandscapeDesc> lt)
         throw std::runtime_error("Invalid landscape");
     this->lt = lt;
     GameObject::ResetCounters();
+
+    // This doesn't happen in the original game, but it keeps things simpler (especially with regards to multiplayer).
+    CHEATS.Reset();
 
     // Dummy so that the harbor "0" might be used for ships with no particular destination
     harbor_pos.push_back(HarborPos(MapPoint::Invalid()));

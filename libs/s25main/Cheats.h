@@ -15,6 +15,10 @@ struct KeyEvent;
 class Cheats : public Singleton<Cheats>
 {
 public:
+    Cheats();
+
+    void Reset();
+
     void TrackKeyEvent(const KeyEvent&, const GameWorldViewer&);
 
     bool IsCheatModeOn() const noexcept { return isCheatModeOn; }
@@ -27,9 +31,9 @@ public:
     void PlaceCheatBuilding(GameWorldView&, const MapPoint&);
 
 private:
-    unsigned char cheatStrIndex = 0;
-    bool isCheatModeOn = false;
-    bool isAllVisible = false;
+    unsigned char cheatStrIndex;
+    bool isCheatModeOn;
+    bool isAllVisible;
 };
 
 #define CHEATS Cheats::inst()

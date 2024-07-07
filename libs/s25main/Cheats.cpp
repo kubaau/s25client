@@ -14,6 +14,18 @@
 #include "world/GameWorldViewer.h"
 #include "gameTypes/MapNode.h"
 
+Cheats::Cheats()
+{
+    Reset();
+}
+
+void Cheats::Reset()
+{
+    cheatStrIndex = 0;
+    isCheatModeOn = false;
+    isAllVisible = false;
+}
+
 void Cheats::TrackKeyEvent(const KeyEvent& ke, const GameWorldViewer& viewer)
 {
     // In the original game, you would have to press the keys for the cheat string in the exact order without any
