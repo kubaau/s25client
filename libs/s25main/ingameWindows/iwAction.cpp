@@ -3,20 +3,19 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "iwAction.h"
+#include "Cheats.h"
 #include "GameInterface.h"
 #include "GamePlayer.h"
 #include "GlobalGameSettings.h"
 #include "Loader.h"
 #include "WindowManager.h"
 #include "addons/const_addons.h"
-#include "buildings/nobHQ.h"
 #include "buildings/nobMilitary.h"
 #include "controls/ctrlBuildingIcon.h"
 #include "controls/ctrlGroup.h"
 #include "controls/ctrlOptionGroup.h"
 #include "controls/ctrlTab.h"
 #include "drivers/VideoDriverWrapper.h"
-#include "factories/BuildingFactory.h"
 #include "iwDemolishBuilding.h"
 #include "iwMilitaryBuilding.h"
 #include "iwObservate.h"
@@ -289,7 +288,7 @@ iwAction::iwAction(GameInterface& gi, GameWorldView& gwv, const Tabs& tabs, MapP
     // Beobachten-main_tab
     if(tabs.watch)
     {
-        if(tabs.place_cheat_building)
+        if(CHEATS.CanPlaceCheatBuilding(gwv.GetViewer(), selectedPt))
         {
             constexpr auto buildImgId = 18;
             const auto buildImg = LOADER.GetImageN("io", buildImgId);
@@ -753,12 +752,7 @@ void iwAction::Msg_ButtonClick_TabCheat(const unsigned ctrl_id)
     switch(ctrl_id)
     {
         case 1:
-            GameWorldBase& world = const_cast<GameWorldBase&>(gwv.GetWorld());
-            world.DestroyNO(selectedPt, false /* checkExists */);
-            const GamePlayer& player = gwv.GetViewer().GetPlayer();
-            const nobHQ* hq = player.GetHQ();
-            BuildingFactory::CreateBuilding(world, BuildingType::Headquarters, selectedPt, player.GetPlayerId(),
-                                            player.nation, hq ? hq->IsTent() : false);
+            CHEATS.PlaceCheatBuilding(gwv, selectedPt);
             Close();
             break;
     }

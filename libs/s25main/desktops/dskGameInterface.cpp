@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "dskGameInterface.h"
+#include "Cheats.h"
 #include "CollisionDetection.h"
 #include "EventManager.h"
 #include "Game.h"
@@ -102,8 +103,7 @@ dskGameInterface::dskGameInterface(std::shared_ptr<Game> game, std::shared_ptr<c
     : Desktop(nullptr), game_(std::move(game)), nwfInfo_(std::move(nwfInfo)),
       worldViewer(playerIdx, const_cast<Game&>(*game_).world_),
       gwv(worldViewer, Position(0, 0), VIDEODRIVER.GetRenderSize()), cbb(*LOADER.GetPaletteN("pal5")),
-      actionwindow(nullptr), roadwindow(nullptr), minimap(worldViewer), isScrolling(false), zoomLvl(ZOOM_DEFAULT_INDEX),
-      isCheatModeOn(false)
+      actionwindow(nullptr), roadwindow(nullptr), minimap(worldViewer), isScrolling(false), zoomLvl(ZOOM_DEFAULT_INDEX)
 {
     road.mode = RoadBuildMode::Disabled;
     road.point = MapPoint(0, 0);
@@ -409,7 +409,7 @@ void dskGameInterface::Msg_PaintAfter()
     DrawPoint iconPos(VIDEODRIVER.GetRenderSize().x - 56, 32);
 
     // Draw cheating indicator icon (WINTER)
-    if(isCheatModeOn)
+    if(CHEATS.IsCheatModeOn())
     {
         glArchivItem_Bitmap* cheatingImg = LOADER.GetImageN("io", 75);
         cheatingImg->DrawFull(iconPos);
@@ -662,23 +662,6 @@ bool dskGameInterface::Msg_LeftDown(const MouseCoords& mc)
             }
         }
 
-#ifdef NDEBUG
-        if(isCheatModeOn)
-#endif // !NDEBUG
-        {
-            if(worldViewer.GetNode(cSel).bq >= BuildingQuality::Hut)
-                action_tabs.place_cheat_building = true;
-
-            if(worldViewer.GetNode(cSel).owner)
-                action_tabs.place_cheat_building = false;
-
-            // It seems that in the original game you can only build headquarters in unoccupied territory at least 2
-            // tiles away from any border markers.
-            for(const MapPoint nb : worldViewer.GetNeighbours(cSel))
-                if(worldViewer.GetNode(nb).owner)
-                    action_tabs.place_cheat_building = false;
-        }
-
         // Bisheriges Actionfenster schließen, falls es eins gab
         // aktuelle Mausposition merken, da diese durch das Schließen verändert werden kann
         if(actionwindow)
@@ -768,18 +751,7 @@ bool dskGameInterface::Msg_KeyDown(const KeyEvent& ke)
             WINDOWMANAGER.ToggleWindow(
               std::make_unique<iwMapDebug>(gwv, game_->world_.IsSinglePlayer() || GAMECLIENT.IsReplayModeOn()));
             return true;
-        case KeyType::F7:
-#ifdef NDEBUG
-            // This is actually the behavior of the original game.
-            // If you enabled cheats, revealed the map and disabled cheats you would be unable to unreveal the map.
-            if(isCheatModeOn)
-#endif // !NDEBUG
-            {
-                worldViewer.ToggleAllVisibleCheat();
-                // The minimap in the original game is not updated immediately, but here this would cause complications.
-                GI_UpdateMapVisibility();
-            }
-            return true;
+        case KeyType::F7: CHEATS.ToggleAllVisible(*this); return true;
         case KeyType::F8: // Tastaturbelegung
             WINDOWMANAGER.ToggleWindow(std::make_unique<iwTextfile>("keyboardlayout.txt", _("Keyboard layout")));
             return true;
@@ -788,12 +760,8 @@ bool dskGameInterface::Msg_KeyDown(const KeyEvent& ke)
             return true;
         case KeyType::F10:
         {
-#ifdef NDEBUG
-            const bool allowHumanAI = isCheatModeOn;
-#else
-            const bool allowHumanAI = true;
-#endif // !NDEBUG
-            if(GAMECLIENT.GetState() == ClientState::Game && allowHumanAI && !GAMECLIENT.IsReplayModeOn())
+            if(GAMECLIENT.GetState() == ClientState::Game && CHEATS.IsCheatModeOnOrDebug()
+               && !GAMECLIENT.IsReplayModeOn())
                 GAMECLIENT.ToggleHumanAIPlayer(AI::Info(AI::Type::Default, AI::Level::Easy));
             return true;
         }
@@ -808,6 +776,7 @@ bool dskGameInterface::Msg_KeyDown(const KeyEvent& ke)
     static std::string winterCheat = "winter";
     switch(ke.c)
     {
+        // TODO: fix this logic (e.g. waaainter)
         case 'w':
         case 'i':
         case 'n':
@@ -819,7 +788,7 @@ bool dskGameInterface::Msg_KeyDown(const KeyEvent& ke)
             {
                 if(curCheatTxt == winterCheat)
                 {
-                    isCheatModeOn = !isCheatModeOn;
+                    CHEATS.ToggleCheatMode();
                     curCheatTxt.clear();
                 }
             } else

@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "world/GameWorldViewer.h"
+#include "Cheats.h"
 #include "GamePlayer.h"
 #include "GlobalGameSettings.h"
 #include "RttrForeachPt.h"
@@ -113,7 +114,7 @@ BuildingQuality GameWorldViewer::GetBQ(const MapPoint& pt) const
 
 Visibility GameWorldViewer::GetVisibility(const MapPoint pt) const
 {
-    if(isAllVisibleCheatEnabled)
+    if(CHEATS.IsAllVisible())
         return Visibility::Visible;
 
     /// Replaymodus und FoW aus? Dann alles sichtbar
@@ -145,11 +146,6 @@ const MapNode& GameWorldViewer::GetNode(const MapPoint& pt) const
 MapPoint GameWorldViewer::GetNeighbour(const MapPoint pt, const Direction dir) const
 {
     return GetWorld().GetNeighbour(pt, dir);
-}
-
-void GameWorldViewer::ToggleAllVisibleCheat()
-{
-    isAllVisibleCheatEnabled = !isAllVisibleCheatEnabled;
 }
 
 void GameWorldViewer::RecalcAllColors()
