@@ -14,12 +14,36 @@ class CheatKeyTracker final
 public:
     CheatKeyTracker(Cheats&);
 
-    void TrackKeyEvent(const KeyEvent&);
+    /** Tracks keyboard events related to cheats and triggers the actual cheats.
+     * Calls related private methods of this class in order but returns at the first success (return true).
+     *
+     * @param ke - The keyboard event encountered.
+     */
+    void TrackKeyEvent(const KeyEvent& ke);
 
 private:
-    bool TrackSpecialKeyEvent(const KeyEvent&);
-    bool TrackSpeedKeyEvent(const KeyEvent&);
-    bool TrackCharKeyEvent(const KeyEvent&);
+    /** Tracks keyboard events related to cheats and triggers the actual cheats, but only tracks events of type
+     * different than KeyType::Char (e.g. F-keys).
+     *
+     * @param ke - The keyboard event encountered.
+     * @return true if keyboard event was NOT of type KeyType::Char, false otherwise
+     */
+    bool TrackSpecialKeyEvent(const KeyEvent& ke);
+
+    /** Tracks keyboard events related to game speed cheats (ALT+1..ALT+6) and triggers the actual cheats.
+     *
+     * @param ke - The keyboard event encountered.
+     * @return true if keyboard event was related to game speed cheats, false otherwise
+     */
+    bool TrackSpeedKeyEvent(const KeyEvent& ke);
+
+    /** Tracks keyboard events related to cheats and triggers the actual cheats, but only tracks events of type
+     * KeyType::Char (e.g. enabling cheat mode by typing "winter").
+     *
+     * @param ke - The keyboard event encountered.
+     * @return always true
+     */
+    bool TrackCharKeyEvent(const KeyEvent& ke);
 
     Cheats& cheats_;
     uint8_t cheatStrIndex_ = 0;

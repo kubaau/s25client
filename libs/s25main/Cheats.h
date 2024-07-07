@@ -16,24 +16,70 @@ class Cheats final
 {
 public:
     Cheats(GameWorldBase&);
-    ~Cheats();
+    ~Cheats(); // default - needed for unique_ptr
 
-    void TrackKeyEvent(const KeyEvent&);
+    /** In single player games, tracks keyboard events related to cheats.
+     * Delegates this responsibility to CheatKeyTracker, which triggers the actual cheats.
+     * In multiplayer games, does nothing. No cheats can be triggered in multiplayer.
+     *
+     * @param ke - The keyboard event encountered.
+     */
+    void TrackKeyEvent(const KeyEvent& ke);
 
+    /** Toggles cheat mode on and off.
+     * Cheat mode needs to be on for any cheats to trigger.
+     */
     void ToggleCheatMode();
+    /** Used by clients to check if cheat mode is on (e.g. to draw a special sprite or enable or all buildings).
+     * Cheat mode needs to be on for any cheats to trigger.
+     *
+     * @return true if cheat mode is on, false otherwise
+     */
     bool IsCheatModeOn() const noexcept { return isCheatModeOn_; }
 
     // Classic cheats
+
+    /** The classic ALT+1 through ALT+6 cheat which changes the game speed.
+     *
+     * @param speedIndex - 0 is normal, 1 is faster, 2 is even faster, etc.
+     */
     void SetGameSpeed(uint8_t speedIndex);
 
+    /** The classic F7 cheat.
+     * Does not modify game state, merely tricks clients into revealing the whole map.
+     * In the background, visibility is tracked as expected, i.e. if you reveal the map, send a scout and unreveal the
+     * map, you will see what was scouted.
+     */
     void ToggleAllVisible();
     bool IsAllVisible() const noexcept { return isAllVisible_; }
 
-    bool CanPlaceCheatBuilding(const MapPoint&) const;
-    void PlaceCheatBuilding(const MapPoint&, const GamePlayer&);
+    /** The classic build headquarters cheat.
+     * This function is used to check if the cheat building can be placed at the chosen point when opening the activity
+     * window.
+     *
+     * @param mp - The map point where the user clicked to open the activity window.
+     * @return true if the building can be placed, false otherwise
+     */
+    bool CanPlaceCheatBuilding(const MapPoint& mp) const;
+    /** The classic build headquarters cheat.
+     * This function is used to place the cheat building at the chosen point.
+     * The building is immediately fully built, there is no need to build it using settlers.
+     *
+     * @param mp - The map point at which to place the building.
+     * @param player - The player to whom the building should belong.
+     */
+    void PlaceCheatBuilding(const MapPoint& mp, const GamePlayer& player);
 
     // RTTR cheats
+
+    /** Shares control of the (human) user's country with the AI. Both the user and the AI retain full control of the
+     * country, so the user can observe what the AI does or "cooperate" with it.
+     */
     void ToggleHumanAIPlayer();
+    /** Reveals mining resources by placing geologist signs wherever there is a resource.
+     * Reveals fishing resources by placing water signs wherever there are fish (this should be more or less clear as
+     * all fish are in the water and a geologist sign cannot be placed in water).
+     */
     void RevealResources();
 
 private:
