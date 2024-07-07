@@ -16,10 +16,10 @@ public:
     Cheats(GameWorldBase&);
 
     void TrackKeyEvent(const KeyEvent&);
-    bool IsCheatModeOn() const noexcept { return isCheatModeOn; }
+    bool IsCheatModeOn() const noexcept { return isCheatModeOn_; }
 
     // Classic cheats
-    bool IsAllVisible() const noexcept { return isAllVisible; }
+    bool IsAllVisible() const noexcept { return isAllVisible_; }
 
     bool CanPlaceCheatBuilding(const MapPoint&) const;
     void PlaceCheatBuilding(const MapPoint&, const GamePlayer&);
@@ -37,8 +37,8 @@ private:
     void RevealResources();
     void ToggleHumanAIPlayer();
 
-    GameWorldBase& world;
-    unsigned char cheatStrIndex = 0;
-    bool isCheatModeOn = false;
-    bool isAllVisible = false;
+    GameWorldBase& world_;
+    unsigned char cheatStrIndex_ = 0;
+    bool isCheatModeOn_ = false;
+    bool isAllVisible_ = false;
 };

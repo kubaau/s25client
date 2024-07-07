@@ -13,7 +13,7 @@
 #include "world/GameWorldBase.h"
 #include "nodeObjs/noSign.h"
 
-Cheats::Cheats(GameWorldBase& world) : world(world) {}
+Cheats::Cheats(GameWorldBase& world) : world_(world) {}
 
 void Cheats::TrackKeyEvent(const KeyEvent& ke)
 {
@@ -27,8 +27,8 @@ bool Cheats::CanPlaceCheatBuilding(const MapPoint& mp) const
 
     // It seems that in the original game you can only build headquarters in unoccupied territory at least 2 nodes
     // away from any border markers and that it doesn't need more bq than a hut.
-    const MapNode& node = world.GetNode(mp);
-    return !node.owner && !world.IsAnyNeighborOwned(mp) && node.bq >= BuildingQuality::Hut;
+    const MapNode& node = world_.GetNode(mp);
+    return !node.owner && !world_.IsAnyNeighborOwned(mp) && node.bq >= BuildingQuality::Hut;
 }
 
 void Cheats::PlaceCheatBuilding(const MapPoint& mp, const GamePlayer& player)
@@ -39,9 +39,9 @@ void Cheats::PlaceCheatBuilding(const MapPoint& mp, const GamePlayer& player)
     // The new HQ will have default resources.
     // In the original game, new HQs created in the Roman campaign had no resources.
     constexpr auto checkExists = false;
-    world.DestroyNO(mp, checkExists); // if CanPlaceCheatBuilding is true then this must be safe to destroy
+    world_.DestroyNO(mp, checkExists); // if CanPlaceCheatBuilding is true then this must be safe to destroy
     const nobHQ* hq = player.GetHQ();
-    BuildingFactory::CreateBuilding(world, BuildingType::Headquarters, mp, player.GetPlayerId(), player.nation,
+    BuildingFactory::CreateBuilding(world_, BuildingType::Headquarters, mp, player.GetPlayerId(), player.nation,
                                     hq ? hq->IsTent() : false);
 }
 
@@ -50,7 +50,7 @@ bool Cheats::TrackSpecialKeyEvent(const KeyEvent& ke)
     if(ke.kt == KeyType::Char)
         return false;
 
-    cheatStrIndex = 0;
+    cheatStrIndex_ = 0;
 
     switch(ke.kt)
     {
@@ -66,7 +66,7 @@ bool Cheats::TrackSpeedKeyEvent(const KeyEvent& ke)
     const char c = ke.c;
     if(ke.alt && c >= '1' && c <= '6')
     {
-        cheatStrIndex = 0;
+        cheatStrIndex_ = 0;
         SetGameSpeed(c);
         return true;
     }
@@ -83,17 +83,16 @@ bool Cheats::TrackCharKeyEvent(const KeyEvent& ke)
     RTTR_Assert(!cheatStr.empty());
 
     const char c = ke.c;
-
-    if(c != cheatStr[cheatStrIndex])
+    if(c != cheatStr[cheatStrIndex_])
     {
-        cheatStrIndex = c == cheatStr.front() ? 1 : 0; // if 'w' then index = 1
+        cheatStrIndex_ = c == cheatStr.front() ? 1 : 0; // if 'w' then index = 1
         return true;
     }
 
-    if(++cheatStrIndex == cheatStr.length())
+    if(++cheatStrIndex_ == cheatStr.length())
     {
-        isCheatModeOn = !isCheatModeOn;
-        cheatStrIndex = 0;
+        isCheatModeOn_ = !isCheatModeOn_;
+        cheatStrIndex_ = 0;
     }
     return true;
 }
@@ -105,9 +104,9 @@ void Cheats::ToggleAllVisible()
     if(!IsCheatModeOn())
         return;
 
-    isAllVisible = !isAllVisible;
+    isAllVisible_ = !isAllVisible_;
     // The minimap in the original game is not updated immediately, but here this would cause complications.
-    if(GameInterface* gi = world.GetGameInterface())
+    if(GameInterface* gi = world_.GetGameInterface())
         gi->GI_UpdateMapVisibility();
 }
 
@@ -125,19 +124,19 @@ void Cheats::RevealResources()
     if(!IsCheatModeOn())
         return;
 
-    const auto width = world.GetWidth();
-    const auto height = world.GetHeight();
+    const auto width = world_.GetWidth();
+    const auto height = world_.GetHeight();
 
     for(MapCoord y = 0; y < height; ++y)
         for(MapCoord x = 0; x < width; ++x)
         {
             const MapPoint mp = {x, y};
 
-            const NodalObjectType noType = world.GetNO(mp)->GetType();
+            const NodalObjectType noType = world_.GetNO(mp)->GetType();
             if(noType != NodalObjectType::Nothing && noType != NodalObjectType::Environment)
                 continue; // don't want to destroy this object to place a sign
 
-            Resource res = world.GetNode(mp).resources;
+            Resource res = world_.GetNode(mp).resources;
 
             switch(res.getType())
             {
@@ -158,9 +157,9 @@ void Cheats::RevealResources()
             }
 
             constexpr auto checkExists = false;
-            world.DestroyNO(mp, checkExists); // safe to destroy because we checked this earlier
+            world_.DestroyNO(mp, checkExists); // safe to destroy because we checked this earlier
             if(res.getAmount())
-                world.SetNO(mp, new noSign(mp, res));
+                world_.SetNO(mp, new noSign(mp, res));
         }
 }
 
