@@ -81,6 +81,9 @@ public:
      * all fish are in the water and a geologist sign cannot be placed in water).
      */
     void RevealResources();
+    /** Destroys all buildings of AI players.
+     */
+    void DestroyAllAI();
 
 private:
     std::unique_ptr<CheatKeyTracker> keyTracker_;

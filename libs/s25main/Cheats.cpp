@@ -136,3 +136,26 @@ void Cheats::RevealResources()
                 world_.SetNO(mp, new noSign(mp, res));
         }
 }
+
+void Cheats::DestroyAllAI()
+{
+    if(!IsCheatModeOn())
+        return;
+
+    const auto width = world_.GetWidth();
+    const auto height = world_.GetHeight();
+
+    for(MapCoord y = 0; y < height; ++y)
+        for(MapCoord x = 0; x < width; ++x)
+        {
+            const MapPoint mp = {x, y};
+
+            if(world_.GetNO(mp)->GetType() != NodalObjectType::Building)
+                continue; // only destroy buildings
+
+            if(world_.GetPlayer(world_.GetNode(mp).owner - 1).isHuman())
+                continue; // don't destroy human buildings
+
+            static_cast<noBuilding*>(world_.GetNO(mp))->Destroy();
+        }
+}

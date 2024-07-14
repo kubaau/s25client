@@ -34,7 +34,16 @@ bool CheatKeyTracker::TrackSpecialKeyEvent(const KeyEvent& ke)
 
     switch(ke.kt)
     {
-        case KeyType::F7: ke.alt ? cheats_.RevealResources() : cheats_.ToggleAllVisible(); break;
+        case KeyType::F7:
+        {
+            if(ke.ctrl && ke.shift && ke.alt)
+                cheats_.DestroyAllAI();
+            else if(ke.alt)
+                cheats_.RevealResources();
+            else
+                cheats_.ToggleAllVisible();
+        }
+        break;
         case KeyType::F10: cheats_.ToggleHumanAIPlayer(); break;
         default: break;
     }
