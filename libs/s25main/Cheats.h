@@ -5,38 +5,34 @@
 #pragma once
 
 #include "gameTypes/MapCoordinates.h"
-#include "s25util/Singleton.h"
 
 class GameInterface;
-class GameWorldView;
-class GameWorldViewer;
+class GamePlayer;
+class GameWorldBase;
 struct KeyEvent;
 
-class Cheats : public Singleton<Cheats>
+class Cheats final
 {
 public:
-    Cheats();
+    Cheats(GameWorldBase&);
 
-    void Reset();
-
-    void TrackKeyEvent(const KeyEvent&, const GameWorldViewer&);
+    void TrackKeyEvent(const KeyEvent&);
     bool IsCheatModeOn() const noexcept { return isCheatModeOn; }
 
     // Classic cheats
     void ToggleAllVisible(GameInterface&);
     bool IsAllVisible() const noexcept { return isAllVisible; }
 
-    bool CanPlaceCheatBuilding(const GameWorldViewer&, const MapPoint&) const;
-    void PlaceCheatBuilding(GameWorldView&, const MapPoint&);
+    bool CanPlaceCheatBuilding(const MapPoint&) const;
+    void PlaceCheatBuilding(const MapPoint&, const GamePlayer&);
 
     // RTTR cheats
     void ToggleHumanAIPlayer();
-    void RevealResources(GameWorldView&);
+    void RevealResources();
 
 private:
-    unsigned char cheatStrIndex;
-    bool isCheatModeOn;
-    bool isAllVisible;
+    GameWorldBase& world;
+    unsigned char cheatStrIndex = 0;
+    bool isCheatModeOn = false;
+    bool isAllVisible = false;
 };
-
-#define CHEATS Cheats::inst()

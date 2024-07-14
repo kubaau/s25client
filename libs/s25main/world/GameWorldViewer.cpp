@@ -114,7 +114,7 @@ BuildingQuality GameWorldViewer::GetBQ(const MapPoint& pt) const
 
 Visibility GameWorldViewer::GetVisibility(const MapPoint pt) const
 {
-    if(CHEATS.IsAllVisible())
+    if(GetWorld().GetCheats().IsAllVisible())
         return Visibility::Visible;
 
     /// Replaymodus und FoW aus? Dann alles sichtbar

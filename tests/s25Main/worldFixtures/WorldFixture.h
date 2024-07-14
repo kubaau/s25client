@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "Cheats.h"
 #include "Game.h"
 #include "GlobalGameSettings.h"
 #include "PlayerInfo.h"
@@ -94,12 +95,13 @@ struct WorldFixture
     TestEventManager& em;
     GlobalGameSettings& ggs;
     GameWorld& world;
+    Cheats cheats;
     T_WorldCreator worldCreator;
     WorldFixture()
         : game(std::make_shared<Game>(GlobalGameSettings(), std::make_unique<TestEventManager>(),
                                       std::vector<PlayerInfo>(T_numPlayers, GetPlayer()))),
           em(static_cast<TestEventManager&>(*game->em_)), ggs(const_cast<GlobalGameSettings&>(game->ggs_)),
-          world(game->world_), worldCreator(MapExtent(T_width, T_height))
+          world(game->world_), cheats(world), worldCreator(MapExtent(T_width, T_height))
     {
         // Fast moving ships
         ggs.setSelection(AddonId::SHIP_SPEED, 4);

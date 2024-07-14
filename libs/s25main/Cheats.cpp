@@ -11,24 +11,11 @@
 #include "factories/BuildingFactory.h"
 #include "network/GameClient.h"
 #include "world/GameWorldBase.h"
-#include "world/GameWorldView.h"
-#include "world/GameWorldViewer.h"
 #include "nodeObjs/noSign.h"
-#include "gameTypes/MapNode.h"
 
-Cheats::Cheats()
-{
-    Reset();
-}
+Cheats::Cheats(GameWorldBase& world) : world(world) {}
 
-void Cheats::Reset()
-{
-    cheatStrIndex = 0;
-    isCheatModeOn = false;
-    isAllVisible = false;
-}
-
-void Cheats::TrackKeyEvent(const KeyEvent& ke, const GameWorldViewer& viewer)
+void Cheats::TrackKeyEvent(const KeyEvent& ke)
 {
     // In the original game, you would have to press the keys for the cheat string in the exact order without any
     // interruptions. For example, clicking CTRL (or any other button) after "w" would mean you have to retype "winter"
@@ -69,7 +56,7 @@ void Cheats::ToggleAllVisible(GameInterface& gi)
     gi.GI_UpdateMapVisibility();
 }
 
-bool Cheats::CanPlaceCheatBuilding(const GameWorldViewer& viewer, const MapPoint& mp) const
+bool Cheats::CanPlaceCheatBuilding(const MapPoint& mp) const
 {
     // The new HQ will have default resources.
     // In the original game, new HQs created in the Roman campaign had no resources.
@@ -77,27 +64,25 @@ bool Cheats::CanPlaceCheatBuilding(const GameWorldViewer& viewer, const MapPoint
     if(!IsCheatModeOn())
         return false;
 
-    if(viewer.GetNode(mp).owner)
+    if(world.GetNode(mp).owner)
         return false;
 
     // It seems that in the original game you can only build headquarters in unoccupied territory at least 2 tiles
     // away from any border markers.
-    for(const MapPoint& nb : viewer.GetNeighbours(mp))
-        if(viewer.GetNode(nb).owner)
+    for(const MapPoint& nb : world.GetNeighbours(mp))
+        if(world.GetNode(nb).owner)
             return false;
 
-    return viewer.GetNode(mp).bq >= BuildingQuality::Hut;
+    return world.GetNode(mp).bq >= BuildingQuality::Hut;
 }
 
-void Cheats::PlaceCheatBuilding(GameWorldView& gwv, const MapPoint& mp)
+void Cheats::PlaceCheatBuilding(const MapPoint& mp, const GamePlayer& player)
 {
-    if(!CanPlaceCheatBuilding(gwv.GetViewer(), mp))
+    if(!CanPlaceCheatBuilding(mp))
         return;
 
-    GameWorldBase& world = const_cast<GameWorldBase&>(gwv.GetWorld());
     constexpr auto checkExists = false;
     world.DestroyNO(mp, checkExists); // if CanPlaceCheatBuilding is true then this must be safe to destroy
-    const GamePlayer& player = gwv.GetViewer().GetPlayer();
     const nobHQ* hq = player.GetHQ();
     BuildingFactory::CreateBuilding(world, BuildingType::Headquarters, mp, player.GetPlayerId(), player.nation,
                                     hq ? hq->IsTent() : false);
@@ -117,12 +102,11 @@ void Cheats::ToggleHumanAIPlayer()
     GAMECLIENT.ToggleHumanAIPlayer({AI::Type::Default, AI::Level::Hard});
 }
 
-void Cheats::RevealResources(GameWorldView& gwv)
+void Cheats::RevealResources()
 {
     if(!IsCheatModeOn())
         return;
 
-    GameWorldBase& world = const_cast<GameWorldBase&>(gwv.GetWorld());
     const auto width = world.GetWidth();
     const auto height = world.GetHeight();
 

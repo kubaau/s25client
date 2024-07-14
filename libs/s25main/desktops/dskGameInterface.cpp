@@ -409,7 +409,7 @@ void dskGameInterface::Msg_PaintAfter()
     DrawPoint iconPos(VIDEODRIVER.GetRenderSize().x - 56, 32);
 
     // Draw cheating indicator icon (WINTER)
-    if(CHEATS.IsCheatModeOn())
+    if(world.IsCheatModeOn())
     {
         glArchivItem_Bitmap* cheatingImg = LOADER.GetImageN("io", 75);
         cheatingImg->DrawFull(iconPos);
@@ -720,7 +720,9 @@ bool dskGameInterface::Msg_RightUp(const MouseCoords& /*mc*/) //-V524
  */
 bool dskGameInterface::Msg_KeyDown(const KeyEvent& ke)
 {
-    CHEATS.TrackKeyEvent(ke, worldViewer);
+    Cheats& cheats = game_->world_.GetCheats();
+
+    cheats.TrackKeyEvent(ke);
 
     switch(ke.kt)
     {
@@ -755,9 +757,9 @@ bool dskGameInterface::Msg_KeyDown(const KeyEvent& ke)
             return true;
         case KeyType::F7:
             if(ke.alt)
-                CHEATS.RevealResources(gwv);
+                cheats.RevealResources();
             else
-                CHEATS.ToggleAllVisible(*this);
+                cheats.ToggleAllVisible(*this);
             return true;
         case KeyType::F8: // Tastaturbelegung
             WINDOWMANAGER.ToggleWindow(std::make_unique<iwTextfile>("keyboardlayout.txt", _("Keyboard layout")));
@@ -765,7 +767,7 @@ bool dskGameInterface::Msg_KeyDown(const KeyEvent& ke)
         case KeyType::F9: // Readme
             WINDOWMANAGER.ToggleWindow(std::make_unique<iwTextfile>("readme.txt", _("Readme!")));
             return true;
-        case KeyType::F10: CHEATS.ToggleHumanAIPlayer(); return true;
+        case KeyType::F10: cheats.ToggleHumanAIPlayer(); return true;
         case KeyType::F11: // Music player (midi files)
             WINDOWMANAGER.ToggleWindow(std::make_unique<iwMusicPlayer>());
             return true;

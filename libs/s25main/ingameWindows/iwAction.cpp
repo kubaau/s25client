@@ -288,7 +288,7 @@ iwAction::iwAction(GameInterface& gi, GameWorldView& gwv, const Tabs& tabs, MapP
     // Beobachten-main_tab
     if(tabs.watch)
     {
-        if(CHEATS.CanPlaceCheatBuilding(gwv.GetViewer(), selectedPt))
+        if(gwv.GetWorld().GetCheats().CanPlaceCheatBuilding(selectedPt))
         {
             constexpr auto buildImgId = 18;
             const auto buildImg = LOADER.GetImageN("io", buildImgId);
@@ -752,7 +752,7 @@ void iwAction::Msg_ButtonClick_TabCheat(const unsigned ctrl_id)
     switch(ctrl_id)
     {
         case 1:
-            CHEATS.PlaceCheatBuilding(gwv, selectedPt);
+            gwv.GetWorld().GetCheats().PlaceCheatBuilding(selectedPt, gwv.GetViewer().GetPlayer());
             Close();
             break;
     }

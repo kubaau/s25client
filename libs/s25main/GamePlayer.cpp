@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "GamePlayer.h"
-#include "Cheats.h"
 #include "EventManager.h"
 #include "FindWhConditions.h"
 #include "GameInterface.h"
@@ -2239,7 +2238,7 @@ void GamePlayer::Trade(nobBaseWarehouse* goalWh, const boost_variant2<GoodType, 
 
 bool GamePlayer::IsBuildingEnabled(BuildingType type) const
 {
-    return building_enabled[type] || CHEATS.IsCheatModeOn();
+    return building_enabled[type] || GetGameWorld().IsCheatModeOn();
 }
 
 void GamePlayer::FillVisualSettings(VisualSettings& visualSettings) const
