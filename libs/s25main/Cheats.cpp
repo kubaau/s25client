@@ -6,6 +6,7 @@
 #include "CheatKeyTracker.h"
 #include "GameInterface.h"
 #include "GamePlayer.h"
+#include "RttrForeachPt.h"
 #include "buildings/nobHQ.h"
 #include "factories/BuildingFactory.h"
 #include "network/GameClient.h"
@@ -98,43 +99,37 @@ void Cheats::RevealResources()
     if(!IsCheatModeOn())
         return;
 
-    const auto width = world_.GetWidth();
-    const auto height = world_.GetHeight();
+    RTTR_FOREACH_PT(MapPoint, world_.GetSize())
+    {
+        const NodalObjectType noType = world_.GetNO(pt)->GetType();
+        if(noType != NodalObjectType::Nothing && noType != NodalObjectType::Environment)
+            continue; // don't want to destroy this object to place a sign
 
-    for(MapCoord y = 0; y < height; ++y)
-        for(MapCoord x = 0; x < width; ++x)
+        Resource res = world_.GetNode(pt).resources;
+
+        switch(res.getType())
         {
-            const MapPoint mp = {x, y};
+            // show these
+            case ResourceType::Iron:
+            case ResourceType::Gold:
+            case ResourceType::Coal:
+            case ResourceType::Granite: break;
 
-            const NodalObjectType noType = world_.GetNO(mp)->GetType();
-            if(noType != NodalObjectType::Nothing && noType != NodalObjectType::Environment)
-                continue; // don't want to destroy this object to place a sign
+            // water is typically almost everywhere, don't reveal, continue to next node
+            case ResourceType::Water: continue;
 
-            Resource res = world_.GetNode(mp).resources;
+            // show fish as water, why the hell not
+            case ResourceType::Fish: res.setType(ResourceType::Water); break;
 
-            switch(res.getType())
-            {
-                // show these
-                case ResourceType::Iron:
-                case ResourceType::Gold:
-                case ResourceType::Coal:
-                case ResourceType::Granite: break;
-
-                // water is typically almost everywhere, don't reveal, continue to next node
-                case ResourceType::Water: continue;
-
-                // show fish as water, why the hell not
-                case ResourceType::Fish: res.setType(ResourceType::Water); break;
-
-                // no resource to reveal, continue to next node
-                default: continue;
-            }
-
-            constexpr auto checkExists = false;
-            world_.DestroyNO(mp, checkExists); // safe to destroy because we checked this earlier
-            if(res.getAmount())
-                world_.SetNO(mp, new noSign(mp, res));
+            // no resource to reveal, continue to next node
+            default: continue;
         }
+
+        constexpr auto checkExists = false;
+        world_.DestroyNO(pt, checkExists); // safe to destroy because we checked this earlier
+        if(res.getAmount())
+            world_.SetNO(pt, new noSign(pt, res));
+    }
 }
 
 void Cheats::DestroyAllAI()
@@ -142,20 +137,14 @@ void Cheats::DestroyAllAI()
     if(!IsCheatModeOn())
         return;
 
-    const auto width = world_.GetWidth();
-    const auto height = world_.GetHeight();
+    RTTR_FOREACH_PT(MapPoint, world_.GetSize())
+    {
+        if(world_.GetNO(pt)->GetType() != NodalObjectType::Building)
+            continue; // only destroy buildings
 
-    for(MapCoord y = 0; y < height; ++y)
-        for(MapCoord x = 0; x < width; ++x)
-        {
-            const MapPoint mp = {x, y};
+        if(world_.GetPlayer(world_.GetNode(pt).owner - 1).isHuman())
+            continue; // don't destroy human buildings
 
-            if(world_.GetNO(mp)->GetType() != NodalObjectType::Building)
-                continue; // only destroy buildings
-
-            if(world_.GetPlayer(world_.GetNode(mp).owner - 1).isHuman())
-                continue; // don't destroy human buildings
-
-            static_cast<noBuilding*>(world_.GetNO(mp))->Destroy();
-        }
+        static_cast<noBuilding*>(world_.GetNO(pt))->Destroy();
+    }
 }
