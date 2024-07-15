@@ -11,7 +11,6 @@
 #include "factories/BuildingFactory.h"
 #include "network/GameClient.h"
 #include "world/GameWorldBase.h"
-#include "nodeObjs/noSign.h"
 
 Cheats::Cheats(GameWorldBase& world) : keyTracker_(std::make_unique<CheatKeyTracker>(*this)), world_(world) {}
 
@@ -94,41 +93,19 @@ void Cheats::ToggleHumanAIPlayer()
     GAMECLIENT.ToggleHumanAIPlayer({AI::Type::Default, AI::Level::Hard});
 }
 
-void Cheats::RevealResources()
+Cheats::ResourceRevealMode Cheats::GetResourceRevealMode() const
 {
-    if(!IsCheatModeOn())
-        return;
+    return IsCheatModeOn() ? resourceRevealMode_ : ResourceRevealMode::Nothing;
+}
 
-    RTTR_FOREACH_PT(MapPoint, world_.GetSize())
+void Cheats::ToggleResourceRevealMode()
+{
+    switch(resourceRevealMode_)
     {
-        const NodalObjectType noType = world_.GetNO(pt)->GetType();
-        if(noType != NodalObjectType::Nothing && noType != NodalObjectType::Environment)
-            continue; // don't want to destroy this object to place a sign
-
-        Resource res = world_.GetNode(pt).resources;
-
-        switch(res.getType())
-        {
-            // show these
-            case ResourceType::Iron:
-            case ResourceType::Gold:
-            case ResourceType::Coal:
-            case ResourceType::Granite: break;
-
-            // water is typically almost everywhere, don't reveal, continue to next node
-            case ResourceType::Water: continue;
-
-            // show fish as water, why the hell not
-            case ResourceType::Fish: res.setType(ResourceType::Water); break;
-
-            // no resource to reveal, continue to next node
-            default: continue;
-        }
-
-        constexpr auto checkExists = false;
-        world_.DestroyNO(pt, checkExists); // safe to destroy because we checked this earlier
-        if(res.getAmount())
-            world_.SetNO(pt, new noSign(pt, res));
+        case ResourceRevealMode::Nothing: resourceRevealMode_ = ResourceRevealMode::Ores; break;
+        case ResourceRevealMode::Ores: resourceRevealMode_ = ResourceRevealMode::Fish; break;
+        case ResourceRevealMode::Fish: resourceRevealMode_ = ResourceRevealMode::Water; break;
+        default: resourceRevealMode_ = ResourceRevealMode::Nothing; break;
     }
 }
 

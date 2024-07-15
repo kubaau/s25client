@@ -76,11 +76,23 @@ public:
      * country, so the user can observe what the AI does or "cooperate" with it.
      */
     void ToggleHumanAIPlayer();
-    /** Reveals mining resources by placing geologist signs wherever there is a resource.
-     * Reveals fishing resources by placing water signs wherever there are fish (this should be more or less clear as
-     * all fish are in the water and a geologist sign cannot be placed in water).
+
+    enum class ResourceRevealMode
+    {
+        Nothing,
+        Ores,
+        Fish,
+        Water
+    };
+    /** Tells clients which resources to reveal:
+     * Nothing - reveal nothing
+     * Ores - reveal ores
+     * Fish - reveal ores and fish
+     * Water - reveal ores, fish and water
      */
-    void RevealResources();
+    ResourceRevealMode GetResourceRevealMode() const;
+    void ToggleResourceRevealMode();
+
     /** Destroys all buildings of AI players.
      */
     void DestroyAllAI();
@@ -90,4 +102,5 @@ private:
     GameWorldBase& world_;
     bool isCheatModeOn_ = false;
     bool isAllVisible_ = false;
+    ResourceRevealMode resourceRevealMode_ = ResourceRevealMode::Nothing;
 };

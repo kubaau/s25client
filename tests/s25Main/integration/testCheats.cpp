@@ -145,7 +145,7 @@ BOOST_FIXTURE_TEST_CASE(CannotToggleAllVisible_WhenCheatModeIsNotOn, EmptyWorldF
     world.SetGameInterface(&gi);
 
     MOCK_EXPECT(gi.GI_UpdateMapVisibility).never();
-    cheats.TrackKeyEvent(MakeKeyEvent(KeyType::F7));
+    cheats.ToggleAllVisible();
     BOOST_TEST_REQUIRE(cheats.IsAllVisible() == false);
 }
 
@@ -154,9 +154,9 @@ BOOST_FIXTURE_TEST_CASE(CanToggleAllVisible_WhenCheatModeIsOn, EmptyWorldFixture
     MockGameInterface gi;
     world.SetGameInterface(&gi);
 
-    TrackString(cheats, "winter");
+    cheats.ToggleCheatMode();
     MOCK_EXPECT(gi.GI_UpdateMapVisibility).once();
-    cheats.TrackKeyEvent(MakeKeyEvent(KeyType::F7));
+    cheats.ToggleAllVisible();
     BOOST_TEST_REQUIRE(cheats.IsAllVisible() == true);
 }
 
@@ -165,13 +165,13 @@ BOOST_FIXTURE_TEST_CASE(CanToggleAllVisibleOnAndOff, EmptyWorldFixture1P)
     MockGameInterface gi;
     world.SetGameInterface(&gi);
 
-    TrackString(cheats, "winter");
+    cheats.ToggleCheatMode();
     MOCK_EXPECT(gi.GI_UpdateMapVisibility).once();
-    cheats.TrackKeyEvent(MakeKeyEvent(KeyType::F7));
+    cheats.ToggleAllVisible();
     BOOST_TEST_REQUIRE(cheats.IsAllVisible() == true);
 
     MOCK_EXPECT(gi.GI_UpdateMapVisibility).once();
-    cheats.TrackKeyEvent(MakeKeyEvent(KeyType::F7));
+    cheats.ToggleAllVisible();
     BOOST_TEST_REQUIRE(cheats.IsAllVisible() == false);
 }
 
@@ -180,15 +180,39 @@ BOOST_FIXTURE_TEST_CASE(CannotToggleAllVisibleOff_AfterTogglingItOnAndDisablingC
     MockGameInterface gi;
     world.SetGameInterface(&gi);
 
-    TrackString(cheats, "winter");
+    cheats.ToggleCheatMode();
     MOCK_EXPECT(gi.GI_UpdateMapVisibility).once();
-    cheats.TrackKeyEvent(MakeKeyEvent(KeyType::F7));
+    cheats.ToggleAllVisible();
     BOOST_TEST_REQUIRE(cheats.IsAllVisible() == true);
 
-    TrackString(cheats, "winter");
+    cheats.ToggleCheatMode();
     MOCK_EXPECT(gi.GI_UpdateMapVisibility).never();
-    cheats.TrackKeyEvent(MakeKeyEvent(KeyType::F7));
+    cheats.ToggleAllVisible();
     BOOST_TEST_REQUIRE(cheats.IsAllVisible() == true);
+}
+
+BOOST_FIXTURE_TEST_CASE(CanToggleResourcesToRevealSuccessively, EmptyWorldFixture1P)
+{
+    using RRM = Cheats::ResourceRevealMode;
+
+    BOOST_CHECK(cheats.GetResourceRevealMode() == RRM::Nothing);
+    cheats.ToggleCheatMode();
+    BOOST_CHECK(cheats.GetResourceRevealMode() == RRM::Nothing);
+    cheats.ToggleResourceRevealMode();
+    BOOST_CHECK(cheats.GetResourceRevealMode() == RRM::Ores);
+    cheats.ToggleResourceRevealMode();
+    BOOST_CHECK(cheats.GetResourceRevealMode() == RRM::Fish);
+    cheats.ToggleResourceRevealMode();
+    BOOST_CHECK(cheats.GetResourceRevealMode() == RRM::Water);
+    cheats.ToggleResourceRevealMode();
+    BOOST_CHECK(cheats.GetResourceRevealMode() == RRM::Nothing);
+    cheats.ToggleResourceRevealMode();
+    BOOST_CHECK(cheats.GetResourceRevealMode() == RRM::Ores);
+    cheats.ToggleCheatMode();
+    BOOST_CHECK(cheats.GetResourceRevealMode() == RRM::Nothing);
+    cheats.ToggleResourceRevealMode();
+    cheats.ToggleCheatMode();
+    BOOST_CHECK(cheats.GetResourceRevealMode() == RRM::Fish);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

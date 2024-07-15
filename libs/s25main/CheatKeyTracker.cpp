@@ -39,7 +39,7 @@ bool CheatKeyTracker::TrackSpecialKeyEvent(const KeyEvent& ke)
             if(ke.ctrl && ke.shift && ke.alt)
                 cheats_.DestroyAllAI();
             else if(ke.alt)
-                cheats_.RevealResources();
+                cheats_.ToggleResourceRevealMode();
             else
                 cheats_.ToggleAllVisible();
         }
