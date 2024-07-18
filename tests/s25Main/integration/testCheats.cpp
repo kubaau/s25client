@@ -4,6 +4,7 @@
 
 #include "Cheats.h"
 #include "GameInterface.h"
+#include "GamePlayer.h"
 #include "driver/KeyEvent.h"
 #include "worldFixtures/CreateEmptyWorld.h"
 #include "worldFixtures/WorldFixture.h"
@@ -15,6 +16,7 @@ BOOST_AUTO_TEST_SUITE(CheatsTests)
 namespace {
 using EmptyWorldFixture1P = WorldFixture<CreateEmptyWorld, 1>;
 using EmptyWorldFixture2P = WorldFixture<CreateEmptyWorld, 2>;
+using EmptyWorldFixture3P = WorldFixture<CreateEmptyWorld, 3>;
 
 KeyEvent MakeKeyEvent(unsigned c)
 {
@@ -213,6 +215,68 @@ BOOST_FIXTURE_TEST_CASE(CanToggleResourcesToRevealSuccessively, EmptyWorldFixtur
     cheats.ToggleResourceRevealMode();
     cheats.ToggleCheatMode();
     BOOST_CHECK(cheats.GetResourceRevealMode() == RRM::Fish);
+}
+
+namespace {
+auto countAllBuildings(const GamePlayer& player)
+{
+    unsigned ret = 0;
+    for(auto b : player.GetBuildingRegister().GetBuildingNums().buildings)
+        ret += b;
+    return ret;
+}
+} // namespace
+
+BOOST_FIXTURE_TEST_CASE(DestroyBuildingsOfGivenPlayer, EmptyWorldFixture2P)
+{
+    cheats.ToggleCheatMode();
+    const GamePlayer& p1 = world.GetPlayer(0);
+    const GamePlayer& p2 = world.GetPlayer(1);
+    BOOST_TEST_REQUIRE(countAllBuildings(p1) == 1);
+    BOOST_TEST_REQUIRE(countAllBuildings(p2) == 1);
+    cheats.DestroyBuildings({0});
+    BOOST_TEST_REQUIRE(countAllBuildings(p1) == 0);
+    BOOST_TEST_REQUIRE(countAllBuildings(p2) == 1);
+}
+
+BOOST_FIXTURE_TEST_CASE(DestroyBuildingsOfGivenPlayers, EmptyWorldFixture2P)
+{
+    cheats.ToggleCheatMode();
+    const GamePlayer& p1 = world.GetPlayer(0);
+    const GamePlayer& p2 = world.GetPlayer(1);
+    BOOST_TEST_REQUIRE(countAllBuildings(p1) == 1);
+    BOOST_TEST_REQUIRE(countAllBuildings(p2) == 1);
+    cheats.DestroyBuildings({0, 1});
+    BOOST_TEST_REQUIRE(countAllBuildings(p1) == 0);
+    BOOST_TEST_REQUIRE(countAllBuildings(p2) == 0);
+}
+
+BOOST_FIXTURE_TEST_CASE(DestroyBuildingsOfAIPlayers, EmptyWorldFixture3P)
+{
+    cheats.ToggleCheatMode();
+    const GamePlayer& p1 = world.GetPlayer(0);
+    GamePlayer& p2 = world.GetPlayer(1);
+    p2.ps = PlayerState::AI;
+    GamePlayer& p3 = world.GetPlayer(2);
+    p3.ps = PlayerState::AI;
+    BOOST_TEST_REQUIRE(countAllBuildings(p1) == 1);
+    BOOST_TEST_REQUIRE(countAllBuildings(p2) == 1);
+    BOOST_TEST_REQUIRE(countAllBuildings(p3) == 1);
+    cheats.DestroyAllAIBuildings();
+    BOOST_TEST_REQUIRE(countAllBuildings(p1) == 1);
+    BOOST_TEST_REQUIRE(countAllBuildings(p2) == 0);
+    BOOST_TEST_REQUIRE(countAllBuildings(p3) == 0);
+}
+
+BOOST_FIXTURE_TEST_CASE(CannotDestroyBuildings_IfCheatModeIsNotOn, EmptyWorldFixture1P)
+{
+    GamePlayer& p1 = world.GetPlayer(0);
+    p1.ps = PlayerState::AI;
+    BOOST_TEST_REQUIRE(countAllBuildings(p1) == 1);
+    cheats.DestroyBuildings({0});
+    BOOST_TEST_REQUIRE(countAllBuildings(p1) == 1);
+    cheats.DestroyAllAIBuildings();
+    BOOST_TEST_REQUIRE(countAllBuildings(p1) == 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

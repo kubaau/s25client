@@ -6,6 +6,7 @@
 
 #include "gameTypes/MapCoordinates.h"
 #include <memory>
+#include <unordered_set>
 
 class CheatKeyTracker;
 class GamePlayer;
@@ -93,9 +94,15 @@ public:
     ResourceRevealMode GetResourceRevealMode() const;
     void ToggleResourceRevealMode();
 
+    using PlayerIDSet = std::unordered_set<unsigned>;
+    /** Destroys all buildings of given players, effectively defeating them.
+     *
+     * @param playerIds - Set of IDs of players.
+     */
+    void DestroyBuildings(const PlayerIDSet& playerIds);
     /** Destroys all buildings of AI players.
      */
-    void DestroyAllAI();
+    void DestroyAllAIBuildings();
 
 private:
     std::unique_ptr<CheatKeyTracker> keyTracker_;

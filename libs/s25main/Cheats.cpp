@@ -109,19 +109,21 @@ void Cheats::ToggleResourceRevealMode()
     }
 }
 
-void Cheats::DestroyAllAI()
+void Cheats::DestroyBuildings(const PlayerIDSet& playerIds)
 {
     if(!IsCheatModeOn())
         return;
 
     RTTR_FOREACH_PT(MapPoint, world_.GetSize())
-    {
-        if(world_.GetNO(pt)->GetType() != NodalObjectType::Building)
-            continue; // only destroy buildings
+        if(world_.GetNO(pt)->GetType() == NodalObjectType::Building && playerIds.count(world_.GetNode(pt).owner - 1))
+            world_.DestroyNO(pt);
+}
 
-        if(world_.GetPlayer(world_.GetNode(pt).owner - 1).isHuman())
-            continue; // don't destroy human buildings
-
-        static_cast<noBuilding*>(world_.GetNO(pt))->Destroy();
-    }
+void Cheats::DestroyAllAIBuildings()
+{
+    PlayerIDSet ais;
+    for(auto i = 0u; i < world_.GetNumPlayers(); ++i)
+        if(!world_.GetPlayer(i).isHuman())
+            ais.insert(i);
+    DestroyBuildings(ais);
 }

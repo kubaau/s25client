@@ -32,13 +32,21 @@ bool CheatKeyTracker::TrackSpecialKeyEvent(const KeyEvent& ke)
     if(ke.kt == KeyType::Char)
         return false;
 
+    if(ke.ctrl && ke.shift)
+    {
+        if(ke.kt >= KeyType::F1 && ke.kt <= KeyType::F8)
+            cheats_.DestroyBuildings({static_cast<unsigned>(ke.kt) - static_cast<unsigned>(KeyType::F1)});
+        else if(ke.kt == KeyType::F9)
+            cheats_.DestroyAllAIBuildings();
+
+        return true;
+    }
+
     switch(ke.kt)
     {
         case KeyType::F7:
         {
-            if(ke.ctrl && ke.shift && ke.alt)
-                cheats_.DestroyAllAI();
-            else if(ke.alt)
+            if(ke.alt)
                 cheats_.ToggleResourceRevealMode();
             else
                 cheats_.ToggleAllVisible();
