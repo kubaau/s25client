@@ -5,6 +5,7 @@
 #include "LuaInterfaceGame.h"
 #include "EventManager.h"
 #include "Game.h"
+#include "Settings.h"
 #include "WindowManager.h"
 #include "ai/AIInterface.h"
 #include "ai/AIPlayer.h"
@@ -12,9 +13,11 @@
 #include "lua/LuaHelpers.h"
 #include "lua/LuaPlayer.h"
 #include "lua/LuaWorld.h"
+#include "network/GameClient.h"
 #include "postSystem/PostMsg.h"
 #include "world/GameWorld.h"
 #include "gameTypes/Resource.h"
+#include "gameData/CampaignSaveCodes.h"
 #include "s25util/Serializer.h"
 #include "s25util/strAlgos.h"
 
@@ -150,6 +153,7 @@ LuaInterfaceGame::LuaInterfaceGame(Game& gameInstance, ILocalGameState& localGam
 #define ADD_LUA_CONST(name) lua[#name] = name
     lua["NON_AGGRESSION_PACT"] = PactType::NonAgressionPact;
     lua["TREATY_OF_ALLIANCE"] = PactType::TreatyOfAlliance;
+    lua["ONE_SIDED_ALLIANCE"] = PactType::OneSidedAlliance;
     // infinite pact duration, see GamePlayer::GetRemainingPactTime
     ADD_LUA_CONST(DURATION_INFINITE);
 #undef ADD_LUA_CONST
@@ -188,23 +192,26 @@ KAGUYA_MEMBER_FUNCTION_OVERLOADS(SetMissionGoalWrapper, LuaInterfaceGame, SetMis
 
 void LuaInterfaceGame::Register(kaguya::State& state)
 {
-    state["RTTRGame"].setClass(kaguya::UserdataMetatable<LuaInterfaceGame, LuaInterfaceGameBase>()
-                                 .addFunction("ClearResources", &LuaInterfaceGame::ClearResources)
-                                 .addFunction("GetGF", &LuaInterfaceGame::GetGF)
-                                 .addFunction("FormatNumGFs", &LuaInterfaceGame::FormatNumGFs)
-                                 .addFunction("GetGameFrame", &LuaInterfaceGame::GetGF)
-                                 .addFunction("GetNumPlayers", &LuaInterfaceGame::GetNumPlayers)
-                                 .addFunction("Chat", &LuaInterfaceGame::Chat)
-                                 .addOverloadedFunctions("MissionStatement", &LuaInterfaceGame::MissionStatement,
-                                                         &LuaInterfaceGame::MissionStatement2,
-                                                         &LuaInterfaceGame::MissionStatement3)
-                                 .addFunction("SetMissionGoal", SetMissionGoalWrapper())
-                                 .addFunction("PostMessage", &LuaInterfaceGame::PostMessageLua)
-                                 .addFunction("PostMessageWithLocation", &LuaInterfaceGame::PostMessageWithLocation)
-                                 .addFunction("GetPlayer", &LuaInterfaceGame::GetPlayer)
-                                 .addFunction("GetWorld", &LuaInterfaceGame::GetWorld)
-                                 // Old name
-                                 .addFunction("GetPlayerCount", &LuaInterfaceGame::GetNumPlayers));
+    state["RTTRGame"].setClass(
+      kaguya::UserdataMetatable<LuaInterfaceGame, LuaInterfaceGameBase>()
+        .addFunction("ClearResources", &LuaInterfaceGame::ClearResources)
+        .addFunction("GetGF", &LuaInterfaceGame::GetGF)
+        .addFunction("FormatNumGFs", &LuaInterfaceGame::FormatNumGFs)
+        .addFunction("GetGameFrame", &LuaInterfaceGame::GetGF)
+        .addFunction("GetNumPlayers", &LuaInterfaceGame::GetNumPlayers)
+        .addFunction("Chat", &LuaInterfaceGame::Chat)
+        .addOverloadedFunctions("MissionStatement", &LuaInterfaceGame::MissionStatement,
+                                &LuaInterfaceGame::MissionStatement2, &LuaInterfaceGame::MissionStatement3)
+        .addFunction("SetMissionGoal", SetMissionGoalWrapper())
+        .addFunction("PostMessage", &LuaInterfaceGame::PostMessageLua)
+        .addFunction("PostMessageWithLocation", &LuaInterfaceGame::PostMessageWithLocation)
+        .addFunction("EnableCampaignChapter", &LuaInterfaceGame::EnableCampaignChapter)
+        .addFunction("SetCampaignChapterCompleted", &LuaInterfaceGame::SetCampaignChapterCompleted)
+        .addFunction("SetCampaignCompleted", &LuaInterfaceGame::SetCampaignCompleted)
+        .addFunction("GetPlayer", &LuaInterfaceGame::GetPlayer)
+        .addFunction("GetWorld", &LuaInterfaceGame::GetWorld)
+        // Old name
+        .addFunction("GetPlayerCount", &LuaInterfaceGame::GetNumPlayers));
     state["RTTR_Serializer"].setClass(kaguya::UserdataMetatable<Serializer>()
                                         .addFunction("PushInt", &Serializer::PushSignedInt)
                                         .addFunction("PopInt", &Serializer::PopSignedInt)
@@ -313,6 +320,42 @@ void LuaInterfaceGame::PostMessageWithLocation(int playerIdx, const std::string&
                                                       gw.MakeMapPoint(Position(x, y))));
 }
 
+namespace {
+void MarkCampaignChapter(const std::string& campaignUid, unsigned char chapter, char code)
+{
+    if(chapter < 1)
+        return;
+
+    auto& saveData = SETTINGS.campaigns.saveData[campaignUid];
+
+    if(saveData.length() < chapter)
+        saveData.resize(chapter);
+
+    auto& chapterSaveData = saveData[chapter - 1];
+
+    if(chapterSaveData == CampaignSaveCodes::chapterCompleted)
+        return;
+
+    chapterSaveData = code;
+}
+} // namespace
+
+void LuaInterfaceGame::EnableCampaignChapter(const std::string& campaignUid, unsigned char chapter)
+{
+    MarkCampaignChapter(campaignUid, chapter, CampaignSaveCodes::chapterEnabled);
+}
+
+void LuaInterfaceGame::SetCampaignChapterCompleted(const std::string& campaignUid, unsigned char chapter)
+{
+    MarkCampaignChapter(campaignUid, chapter, CampaignSaveCodes::chapterCompleted);
+    GAMECLIENT.SetCampaignChapterCompleted(chapter);
+}
+
+void LuaInterfaceGame::SetCampaignCompleted(const std::string& /* campaignUid */)
+{
+    GAMECLIENT.SetCampaignCompleted(true);
+}
+
 LuaPlayer LuaInterfaceGame::GetPlayer(int playerIdx)
 {
     lua::assertTrue(playerIdx >= 0 && static_cast<unsigned>(playerIdx) < gw.GetNumPlayers(), "Invalid player idx");
@@ -361,6 +404,13 @@ void LuaInterfaceGame::EventStart(bool isFirstStart)
     kaguya::LuaRef onStart = lua["onStart"];
     if(onStart.type() == LUA_TFUNCTION)
         onStart.call<void>(isFirstStart);
+}
+
+void LuaInterfaceGame::EventHumanWinner()
+{
+    kaguya::LuaRef onStart = lua["onHumanWinner"];
+    if(onStart.type() == LUA_TFUNCTION)
+        onStart.call<void>();
 }
 
 void LuaInterfaceGame::EventGameFrame(unsigned nr)

@@ -1,14 +1,12 @@
 ------------------------------------------------------------------------------
 -- LUA-Script for MISS208.WLD (mission 9 of the original "Roman Campaign")  --
 --                                                                          --
--- Authors: CrazyL, Spikeone, ArthurMurray47                                --
+-- Authors: CrazyL, Spikeone, ArthurMurray47, kubaau                        --
 ------------------------------------------------------------------------------
 
 
 -------------------------------- TODO -----------------------------------------
--- EnableNextMissions()
 -- Set Portraits
--- Set AI Agression Level
 -------------------------------------------------------------------------------
 
 
@@ -87,6 +85,7 @@ function onSettingsReady()
     checkVersion()
     rttr:Log("-----------------------\n MISS208.lua loaded... \n-----------------------\n")
     rttr:ResetAddons()
+    rttr:SetAddon(ADDON_CATAPULTS_ATTACK_ALLIES, true)
     rttr:SetAddon(ADDON_FRONTIER_DISTANCE_REACHABLE, true)
     rttr:SetGameSettings({
         ["fow"] = EXP_CLASSIC,
@@ -101,17 +100,20 @@ function onSettingsReady()
     rttr:GetPlayer(1):SetNation(NAT_JAPANESE)   -- nation
     rttr:GetPlayer(1):SetColor(1)               -- yellow
     rttr:GetPlayer(1):SetName('Yamauchi')       -- Enemy Name
-    rttr:GetPlayer(1):SetTeam(TM_TEAM1)
 
     rttr:GetPlayer(2):SetAI(3)                  -- hard AI
     rttr:GetPlayer(2):SetNation(NAT_JAPANESE)   -- nation
     rttr:GetPlayer(2):SetColor(2)               -- red
     rttr:GetPlayer(2):SetName('Tsunami')        -- Enemy Name
-    rttr:GetPlayer(2):SetTeam(TM_TEAM1)
 end
 
 -- start callback
 function onStart(isFirstStart)
+    if isFirstStart then
+        rttr:GetPlayer(2):MakeOneSidedAllianceTo(1) -- !GLOBAL_SET_COMPUTER_ALLIANCE  2 1
+        rttr:GetPlayer(1):MakeOneSidedAllianceTo(2) -- !GLOBAL_SET_COMPUTER_ALLIANCE  1 2
+    end
+
     for i = 0, (rttr:GetPlayerCount() - 1) do   -- set resources
         addPlayerRes(i, not isFirstStart)
         addPlayerBld(i, not isFirstStart)
@@ -441,9 +443,10 @@ function MissionEvent(e, onLoad)
         rttr:GetPlayer(2):SetRestrictedArea()
 
     elseif(e == 99) then
-        -- TODO: EnableNextMissions()
         -- Show opened arc - Done
         rttr:GetWorld():AddStaticObject(127, 48, 561, 0xFFFF, 2)
+        rttr:SetCampaignChapterCompleted("roman", 9)
+        rttr:EnableCampaignChapter("roman", 10)
     end
 
     -- update event state

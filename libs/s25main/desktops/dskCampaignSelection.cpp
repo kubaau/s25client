@@ -87,7 +87,8 @@ dskCampaignSelection::dskCampaignSelection(CreateServerInfo csi)
                  Extent(secondColumnExtentX, mutlilineExtentY), TextureColor::Grey, NormalFont);
 
     AddTextButton(ID_Back, DrawPoint(380, 560), Extent(200, 22), TextureColor::Red1, _("Back"), NormalFont);
-    AddTextButton(ID_Next, DrawPoint(590, 560), Extent(200, 22), TextureColor::Green2, _("Continue"), NormalFont);
+    AddTextButton(ID_Next, DrawPoint(590, 560), Extent(200, 22), TextureColor::Green2, _("Continue"), NormalFont)
+      ->SetEnabled(false);
 
     showCampaignInfo(false);
 
@@ -107,7 +108,6 @@ void dskCampaignSelection::Msg_TableSelectItem(const unsigned ctrl_id, const boo
         return;
 
     ctrlButton& btContinue = *GetCtrl<ctrlButton>(ID_Next);
-    btContinue.SetEnabled(false);
     showCampaignInfo(false);
     campaignImage_ = nullptr;
 
@@ -169,9 +169,11 @@ bool dskCampaignSelection::hasMapSelectionScreen()
 void dskCampaignSelection::showCampaignMissionSelectionScreen()
 {
     if(hasMapSelectionScreen())
-        WINDOWMANAGER.Switch(std::make_unique<dskCampaignMissionMapSelection>(csi_, getSelectedCampaignPath()));
+        WINDOWMANAGER.Switch(std::make_unique<dskCampaignMissionMapSelection>(csi_, getSelectedCampaignPath(),
+                                                                              CreatedFrom::CampaignSelection));
     else
-        WINDOWMANAGER.Switch(std::make_unique<dskCampaignMissionSelection>(csi_, getSelectedCampaignPath()));
+        WINDOWMANAGER.Switch(std::make_unique<dskCampaignMissionSelection>(csi_, getSelectedCampaignPath(),
+                                                                           CreatedFrom::CampaignSelection));
 }
 
 boost::filesystem::path dskCampaignSelection::getSelectedCampaignPath()

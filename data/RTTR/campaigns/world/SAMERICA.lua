@@ -25,6 +25,7 @@ end
 function onSettingsReady()
     rttr:Log("-----------------------\n SAMERICA.lua loaded... \n-----------------------\n")
     rttr:ResetAddons()
+    rttr:SetAddon(ADDON_CATAPULTS_ATTACK_ALLIES, true)
     rttr:SetAddon(ADDON_FRONTIER_DISTANCE_REACHABLE, true)
     rttr:SetGameSettings({
         ["fow"] = EXP_CLASSIC,
@@ -59,4 +60,10 @@ function getAllowedChanges()
         ["aiColor"]     = false,
         ["aiTeam"]      = false
     }
+end
+
+-------------------------------- mission events -------------------------------
+function onHumanWinner()
+    rttr:SetCampaignChapterCompleted("world", 4)
+    rttr:EnableCampaignChapter("world", 3) -- namerica
 end

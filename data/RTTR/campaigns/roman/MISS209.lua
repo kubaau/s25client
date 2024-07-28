@@ -1,14 +1,12 @@
 ------------------------------------------------------------------------------
 -- LUA-Script for MISS209.WLD (mission 10 of the original "Roman Campaign") --
 --                                                                          --
--- Authors: CrazyL, Spikeone, ArthurMurray47                                --
+-- Authors: CrazyL, Spikeone, ArthurMurray47, kubaau                        --
 ------------------------------------------------------------------------------
 
 
 -------------------------------- TODO -----------------------------------------
--- EnableNextMissions()
 -- Set Portraits
--- Set AI Agression Level
 -------------------------------------------------------------------------------
 
 
@@ -96,6 +94,7 @@ function onSettingsReady()
     checkVersion()
     rttr:Log("-----------------------\n MISS209.lua loaded... \n-----------------------\n")
     rttr:ResetAddons()
+    rttr:SetAddon(ADDON_CATAPULTS_ATTACK_ALLIES, true)
     rttr:SetAddon(ADDON_FRONTIER_DISTANCE_REACHABLE, true)
     rttr:SetGameSettings({
         ["fow"] = EXP_CLASSIC,
@@ -110,17 +109,21 @@ function onSettingsReady()
     rttr:GetPlayer(1):SetNation(NAT_ROMANS)     -- nation
     rttr:GetPlayer(1):SetColor(1)               -- yellow
     rttr:GetPlayer(1):SetName('Brutus')         -- Enemy Name
-    rttr:GetPlayer(1):SetTeam(TM_TEAM1)
 
     rttr:GetPlayer(2):SetAI(3)                  -- hard AI
     rttr:GetPlayer(2):SetNation(NAT_VIKINGS)    -- nation
     rttr:GetPlayer(2):SetColor(2)               -- red
     rttr:GetPlayer(2):SetName('Olof')           -- Enemy Name
-    rttr:GetPlayer(2):SetTeam(TM_TEAM1)
 end
 
 -- start callback
 function onStart(isFirstStart)
+    if isFirstStart then
+        rttr:GetPlayer(2):MakeOneSidedAllianceTo(1) -- !GLOBAL_SET_COMPUTER_ALLIANCE  2 1
+        rttr:GetPlayer(1):MakeOneSidedAllianceTo(2) -- !GLOBAL_SET_COMPUTER_ALLIANCE  1 2
+        rttr:GetPlayer(1):MakeOneSidedAllianceTo(0) -- !GLOBAL_SET_COMPUTER_ALLIANCE  1 0
+    end
+
     for i = 0, (rttr:GetPlayerCount() - 1) do   -- set resources
         addPlayerRes(i, not isFirstStart)
         addPlayerBld(i, not isFirstStart)
@@ -469,9 +472,10 @@ function MissionEvent(e, onLoad)
         rttr:GetPlayer(2):SetRestrictedArea()
         
     elseif(e == 99) then
-        -- TODO: EnableNextMissions()
         -- Show opened arc
         rttr:GetWorld():AddStaticObject(75, 40, 561, 0xFFFF, 2)
+        rttr:SetCampaignChapterCompleted("roman", 10)
+        rttr:SetCampaignCompleted("roman")
     end
 
     -- update event state

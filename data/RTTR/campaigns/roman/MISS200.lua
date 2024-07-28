@@ -6,9 +6,7 @@
 
 
 -------------------------------- TODO -----------------------------------------
--- EnableNextMissions()
 -- Set Portraits
--- Set AI Agression Level
 -------------------------------------------------------------------------------
 
 
@@ -175,6 +173,10 @@ rttr:RegisterTranslations(
     },
 })
 
+function getNumPlayers()
+    return 1
+end
+
 -- format mission texts
 -- BUG:     NewLine at the end is wrongly interpreted, adding 2x Space resolves this issue
 function MissionText(e)
@@ -196,6 +198,7 @@ function onSettingsReady()
     checkVersion()
     rttr:Log("-----------------------\n MISS200.lua loaded... \n-----------------------\n")
     rttr:ResetAddons()
+    rttr:SetAddon(ADDON_CATAPULTS_ATTACK_ALLIES, true)
     rttr:SetAddon(ADDON_FRONTIER_DISTANCE_REACHABLE, true)
     rttr:SetGameSettings({
         ["fow"] = EXP_CLASSIC,
@@ -205,13 +208,6 @@ function onSettingsReady()
 
     rttr:GetPlayer(0):SetNation(NAT_ROMANS)     -- nation
     rttr:GetPlayer(0):SetColor(0)               -- 0:blue, 1:red, 2:yellow, 
-
-    rttr:GetPlayer(1):Close()
-    rttr:GetPlayer(2):Close()
-    rttr:GetPlayer(3):Close()
-    rttr:GetPlayer(4):Close()
-    rttr:GetPlayer(5):Close()
-    rttr:GetPlayer(6):Close()
 end
 
 function getAllowedChanges()
@@ -508,9 +504,9 @@ function MissionEvent(e, onLoad)
         rttr:GetPlayer(0):EnableBuilding(BLD_BAKERY, not onLoad)
 
     elseif(e == 99) then
-        -- TODO: EnableNextMissions()
         -- Show opened arc
         rttr:GetWorld():AddStaticObject(14, 8, 561, 0xFFFF, 2)
+        rttr:SetCampaignChapterCompleted("roman", 1)
     end
 
     -- update event state

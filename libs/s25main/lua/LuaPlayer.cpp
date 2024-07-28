@@ -9,6 +9,7 @@
 #include "ai/AIPlayer.h"
 #include "buildings/nobBaseWarehouse.h"
 #include "buildings/nobHQ.h"
+#include "factories/BuildingFactory.h"
 #include "helpers/EnumRange.h"
 #include "helpers/toString.h"
 #include "lua/LuaHelpers.h"
@@ -46,14 +47,16 @@ void LuaPlayer::Register(kaguya::State& state)
                                .addFunction("GetNumPeople", &LuaPlayer::GetNumPeople)
                                .addFunction("GetStatisticsValue", &LuaPlayer::GetStatisticsValue)
                                .addFunction("AIConstructionOrder", &LuaPlayer::AIConstructionOrder)
+                               .addFunction("PlaceHQ", &LuaPlayer::PlaceHQ)
                                .addFunction("ModifyHQ", &LuaPlayer::ModifyHQ)
                                .addFunction("GetHQPos", &LuaPlayer::GetHQPos)
                                .addFunction("IsDefeated", &LuaPlayer::IsDefeated)
                                .addFunction("Surrender", &LuaPlayer::Surrender)
                                .addFunction("IsAlly", &LuaPlayer::IsAlly)
-                               .addFunction("IsAttackable", &LuaPlayer::IsAttackable)
+                               .addFunction("CanAttack", &LuaPlayer::CanAttack)
                                .addFunction("SuggestPact", &LuaPlayer::SuggestPact)
                                .addFunction("CancelPact", &LuaPlayer::CancelPact)
+                               .addFunction("MakeOneSidedAllianceTo", &LuaPlayer::MakeOneSidedAllianceTo)
                                // Old names
                                .addFunction("GetBuildingCount", &LuaPlayer::GetNumBuildings)
                                .addFunction("GetBuildingSitesCount", &LuaPlayer::GetNumBuildingSites)
@@ -259,6 +262,19 @@ bool LuaPlayer::AIConstructionOrder(unsigned x, unsigned y, lua::SafeEnum<Buildi
     return true;
 }
 
+void LuaPlayer::PlaceHQ(MapCoord x, MapCoord y)
+{
+    // Ignore if there is an HQ set in the map file.
+    if(player.GetHQPos().isValid())
+        return;
+
+    GameWorld& world = player.GetGameWorld();
+    const MapPoint mp{x, y};
+    constexpr auto checkExists = false;
+    world.DestroyNO(mp, checkExists);
+    BuildingFactory::CreateBuilding(world, BuildingType::Headquarters, mp, player.GetPlayerId(), player.nation);
+}
+
 void LuaPlayer::ModifyHQ(bool isTent)
 {
     player.SetHQIsTent(isTent);
@@ -286,9 +302,9 @@ bool LuaPlayer::IsAlly(unsigned char otherPlayerId)
     return player.IsAlly(otherPlayerId);
 }
 
-bool LuaPlayer::IsAttackable(unsigned char otherPlayerId)
+bool LuaPlayer::CanAttack(unsigned char otherPlayerId)
 {
-    return player.IsAttackable(otherPlayerId);
+    return player.CanAttack(otherPlayerId);
 }
 
 void LuaPlayer::SuggestPact(unsigned char otherPlayerId, const lua::SafeEnum<PactType> pt, const unsigned duration)
@@ -303,4 +319,9 @@ void LuaPlayer::CancelPact(const lua::SafeEnum<PactType> pt, unsigned char other
     AIPlayer* ai = game.GetAIPlayer(player.GetPlayerId());
     if(ai != nullptr)
         ai->getAIInterface().CancelPact(pt, otherPlayerId);
+}
+
+void LuaPlayer::MakeOneSidedAllianceTo(unsigned char otherPlayerId)
+{
+    player.MakeOneSidedAllianceTo(otherPlayerId);
 }
