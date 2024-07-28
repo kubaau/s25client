@@ -13,6 +13,7 @@
 #include "postSystem/PostManager.h"
 #include "world/World.h"
 #include <memory>
+#include <set>
 #include <vector>
 
 class Cheats;
@@ -59,6 +60,7 @@ class GameWorldBase : public World
     const GlobalGameSettings& gameSettings;
     EventManager& em;
     std::unique_ptr<SoundManager> soundManager;
+    std::set<MapPoint, MapPointLess> ptsInsideComputerBarriers;
     LuaInterfaceGame* lua;
     std::unique_ptr<Cheats> cheats;
 
@@ -217,6 +219,9 @@ public:
 
     /// Recalculates the BQ for the given point
     void RecalcBQ(MapPoint pt);
+
+    void SetComputerBarrier(const MapPoint& pt, unsigned radius);
+    bool IsInsideComputerBarrier(const MapPoint& pt) const;
 
     bool HasLua() const { return lua != nullptr; }
     LuaInterfaceGame& GetLua() const { return *lua; }

@@ -28,7 +28,7 @@ function checkVersion()
 end
 -------------------------------- mission events and texts --------------------
 -- Message-Window (mission statement and hints): 52 chars wide
-eIdx = {1, 2, 3, 98, 99}
+eIdx = {1, 2, 3, 99}
 
 rttr:RegisterTranslations(
 {
@@ -159,6 +159,12 @@ function onStart(isFirstStart)
         eHist = {["n"] = 0}
         MissionEvent(1)                         -- initial event / start screen
     end
+
+    rttr:GetWorld():SetComputerBarrier(10, 51, 22)
+    rttr:GetWorld():SetComputerBarrier(10, 36, 23)
+    rttr:GetWorld():SetComputerBarrier(8, 50, 60)
+    rttr:GetWorld():SetComputerBarrier(8, 49, 64)
+    rttr:GetWorld():SetComputerBarrier(8, 47, 68)
 end
 
 -- save callback
@@ -187,6 +193,7 @@ function addPlayerBld(p, onLoad)
     rttr:GetPlayer(p):DisableBuilding(BLD_SHIPYARD, false)
     rttr:GetPlayer(p):DisableBuilding(BLD_HARBORBUILDING, false)
 
+<<<<<<< HEAD
     --!GLOBAL_SET_COMPUTER_BARRIER     10     51  22
     --!GLOBAL_SET_COMPUTER_BARRIER     10     36  23
     --!GLOBAL_SET_COMPUTER_BARRIER     08     50  60
@@ -230,6 +237,11 @@ function addPlayerBld(p, onLoad)
             rttr:GetPlayer(p):PlaceHQ(40, 54)   -- !SET_HOUSE 24, 40, 54
             rttr:GetPlayer(p):AIConstructionOrder(43, 59, BLD_FORTRESS)
         end
+=======
+    if(p == 2) then
+        if onLoad then return end
+        rttr:GetPlayer(p):AIConstructionOrder(43, 59, BLD_FORTRESS)
+>>>>>>> set_computer_barrier
     end
 end
 
@@ -464,10 +476,6 @@ function onOccupied(p, x, y)
 
     if( (x == 13) and (y == 66) ) then MissionEvent(99)
     end
-
-    if(not rttr:GetPlayer(1):IsInRestrictedArea(x, y)) then 
-        MissionEvent(98) -- for lifting restrictions
-    end
 end
 
 function onExplored(p, x, y, o)
@@ -491,12 +499,8 @@ function MissionEvent(e, onLoad)
         return
     end
 
-    if(e == 98) then
-        rttr:GetPlayer(1):SetRestrictedArea()
-        rttr:GetPlayer(2):SetRestrictedArea()
-
     -- call side effects for active events, check "eState[e] == 1" for multiple call events!
-    elseif(e == 99) then
+    if(e == 99) then
         -- Show opened arc
         rttr:GetWorld():AddStaticObject(13, 66, 561, 0xFFFF, 2)
         rttr:SetCampaignChapterCompleted("roman", 7)
