@@ -163,8 +163,8 @@ BOOST_AUTO_TEST_CASE(GameFunctions)
 {
     initWorld();
     std::array<nobHQ*, 2> hqs;
-    hqs[0] = world.GetSpecObj<nobHQ>(world.GetPlayer(0).GetHQPos());
-    hqs[1] = world.GetSpecObj<nobHQ>(world.GetPlayer(1).GetHQPos());
+    hqs[0] = world.GetPlayer(0).GetHQ();
+    hqs[1] = world.GetPlayer(1).GetHQ();
 
     BOOST_TEST_REQUIRE(hqs[0]->GetNumRealWares(GoodType::Boards) > 0u);
 
@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE(IngamePlayer)
     initWorld();
 
     const GamePlayer& player = world.GetPlayer(1);
-    const nobHQ* hq = world.GetSpecObj<nobHQ>(player.GetHQPos());
+    const nobHQ* hq = player.GetHQ();
     executeLua("player = rttr:GetPlayer(1)\nassert(player)");
 
     BOOST_TEST_REQUIRE(player.IsBuildingEnabled(BuildingType::Woodcutter));
@@ -482,7 +482,7 @@ BOOST_AUTO_TEST_CASE(IngamePlayer)
     executeLua("player = rttr:GetPlayer(0)");
     MapPoint hqPos = player0.GetHQPos();
     BOOST_TEST_REQUIRE(hqPos.isValid());
-    BOOST_TEST_REQUIRE(world.GetSpecObj<nobHQ>(hqPos));
+    BOOST_TEST_REQUIRE(player0.GetHQ());
     BOOST_TEST_REQUIRE(!player0.IsDefeated());
     BOOST_TEST(isLuaEqual("player:IsDefeated()", "false"));
     executeLua("player:Surrender(false)");
@@ -490,11 +490,11 @@ BOOST_AUTO_TEST_CASE(IngamePlayer)
     BOOST_TEST(isLuaEqual("player:IsDefeated()", "true"));
     // HQ should still be there
     BOOST_TEST_REQUIRE(player0.GetHQPos().isValid());
-    BOOST_TEST_REQUIRE(world.GetSpecObj<nobHQ>(hqPos));
+    BOOST_TEST_REQUIRE(player0.GetHQ());
     // Destroy everything
     executeLua("player:Surrender(true)");
     BOOST_TEST_REQUIRE(!player0.GetHQPos().isValid());
-    BOOST_TEST_REQUIRE(!world.GetSpecObj<nobHQ>(hqPos));
+    BOOST_TEST_REQUIRE(!player0.GetHQ());
 }
 
 BOOST_AUTO_TEST_CASE(RestrictedArea)

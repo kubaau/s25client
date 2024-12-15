@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "gameTypes/MapCoordinates.h"
+
 class GameWorldBase;
 
 class Cheats
@@ -19,6 +21,9 @@ public:
     // Classic S2 cheats
     void toggleAllVisible();
     bool isAllVisible() const { return isAllVisible_; }
+
+    bool canBuildHQ(const MapPoint& mp) const;
+    void buildHQ(const MapPoint& mp);
 
     // RTTR cheats
     void toggleHumanAIPlayer() const;

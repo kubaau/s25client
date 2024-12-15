@@ -170,6 +170,19 @@ bool GameWorldBase::IsFlagAround(const MapPoint& pt) const
     return false;
 }
 
+bool GameWorldBase::IsAnyNeighborOwned(const MapPoint& pt) const
+{
+    for(const MapPoint& nb : GetNeighbours(pt))
+        if(GetNode(nb).owner)
+            return true;
+    return false;
+}
+
+bool GameWorldBase::IsPointOrAnyNeighborOwned(const MapPoint& pt) const
+{
+    return GetNode(pt).owner || IsAnyNeighborOwned(pt);
+}
+
 void GameWorldBase::RecalcBQForRoad(const MapPoint pt)
 {
     RecalcBQ(pt);
