@@ -20,6 +20,8 @@ public:
     void toggleAllVisible();
     bool isAllVisible() const { return isAllVisible_; }
 
+    void setGameSpeed(unsigned speedIndex);
+
     // RTTR cheats
     void toggleHumanAIPlayer() const;
     void armageddon() const;

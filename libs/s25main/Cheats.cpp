@@ -33,6 +33,23 @@ void Cheats::toggleAllVisible()
     }
 }
 
+void Cheats::setGameSpeed(unsigned speedIndex)
+{
+    if(!isCheatModeOn())
+        return;
+
+    switch(speedIndex)
+    {
+        case 0: return GAMECLIENT.SetGFLengthReq(FramesInfo::milliseconds32_t{50});
+        case 1: return GAMECLIENT.SetGFLengthReq(FramesInfo::milliseconds32_t{25});
+        case 2: return GAMECLIENT.SetGFLengthReq(FramesInfo::milliseconds32_t{10});
+        case 3: return GAMECLIENT.SetGFLengthReq(FramesInfo::milliseconds32_t{1}, false);
+        case 4: return GAMECLIENT.SetGFLengthReq(FramesInfo::milliseconds32_t{1}, false, 10);
+        case 5: return GAMECLIENT.SetGFLengthReq(FramesInfo::milliseconds32_t{1}, false, 500);
+        default: RTTR_Assert(false); // should never happen
+    }
+}
+
 void Cheats::toggleHumanAIPlayer() const
 {
     if(isCheatModeOn() && !GAMECLIENT.IsReplayModeOn())
