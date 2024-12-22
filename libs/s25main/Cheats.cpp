@@ -107,7 +107,7 @@ void Cheats::setGameSpeed(GameSpeed speed)
                 break;
         }
 
-        GAMECLIENT.SetGFLengthReq(gfLengthReq, /*enforceReleaseLimit*/ false, framesToSkipOnEachDraw);
+        GAMECLIENT.SetGFLengthReq(gfLengthReq, framesToSkipOnEachDraw);
     }
 }
 

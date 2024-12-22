@@ -132,8 +132,7 @@ public:
     // Used by -
     void DecreaseSpeed();
     // Used by ALT+1 through ALT+6 (cheats)
-    void SetGFLengthReq(FramesInfo::milliseconds32_t, bool enforceReleaseLimit = true,
-                        unsigned framesToSkipOnEachDraw = 0);
+    void SetGFLengthReq(FramesInfo::milliseconds32_t, unsigned framesToSkipOnEachDraw = 0);
     FramesInfo::milliseconds32_t GetGFLengthReq() const { return framesinfo.gfLengthReq; }
 
     /// Lädt ein Replay und startet dementsprechend das Spiel

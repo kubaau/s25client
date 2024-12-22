@@ -1162,15 +1162,9 @@ void GameClient::DecreaseSpeed()
     SetGFLengthReq(framesinfo.gfLengthReq / 10 * 10 + 10ms);
 }
 
-void GameClient::SetGFLengthReq(FramesInfo::milliseconds32_t gfLengthReq, bool enforceReleaseLimit,
-                                unsigned framesToSkipOnEachDraw)
+void GameClient::SetGFLengthReq(FramesInfo::milliseconds32_t gfLengthReq, unsigned framesToSkipOnEachDraw)
 {
-#ifndef NDEBUG
     constexpr auto minLength = 1ms;
-#else
-    const auto minLength = IsReplayModeOn() || !enforceReleaseLimit ? 1ms : 10ms;
-#endif
-
     const auto maxLength = IsReplayModeOn() ? 1000ms : 70ms;
 
     if(gfLengthReq == 0ms)

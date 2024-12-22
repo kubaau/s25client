@@ -301,7 +301,6 @@ BOOST_AUTO_TEST_CASE(DecreaseSpeed_IncreasesGF_WhenNotDivisibleBy10_RoundsUpTo10
     BOOST_TEST_REQUIRE(client.GetGFLengthReq().count() == 20);
 }
 
-#ifndef NDEBUG
 BOOST_AUTO_TEST_CASE(IncreaseSpeed_DecreasesGF_When10orLess_To1)
 {
     GameClient client;
@@ -349,30 +348,5 @@ BOOST_AUTO_TEST_CASE(DecreaseSpeed_SetsGF_WhenLimitReached_To1_ReplayModeOff)
     client.DecreaseSpeed();
     BOOST_TEST_REQUIRE(client.GetGFLengthReq().count() == 1);
 }
-#else
-BOOST_AUTO_TEST_CASE(IncreaseSpeed_SetsGF_When10OrLess_To70)
-{
-    GameClient client;
-
-    client.SetGFLengthReq(10ms);
-    BOOST_TEST_REQUIRE(client.GetGFLengthReq().count() == 10);
-    client.IncreaseSpeed();
-    BOOST_TEST_REQUIRE(client.GetGFLengthReq().count() == 70);
-
-    client.SetGFLengthReq(1ms);
-    BOOST_TEST_REQUIRE(client.GetGFLengthReq().count() == 10);
-    client.IncreaseSpeed();
-    BOOST_TEST_REQUIRE(client.GetGFLengthReq().count() == 70);
-}
-
-BOOST_AUTO_TEST_CASE(DecreaseSpeed_SetsGF_WhenLimitReached_To10_ReplayModeOff)
-{
-    GameClient client;
-
-    client.SetGFLengthReq(70ms);
-    client.DecreaseSpeed();
-    BOOST_TEST_REQUIRE(client.GetGFLengthReq().count() == 10);
-}
-#endif
 
 BOOST_AUTO_TEST_SUITE_END()
