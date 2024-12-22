@@ -4,6 +4,8 @@
 
 #include "Cheats.h"
 #include "GameInterface.h"
+#include "GamePlayer.h"
+#include "factories/BuildingFactory.h"
 #include "network/GameClient.h"
 #include "world/GameWorldBase.h"
 
@@ -54,6 +56,26 @@ void Cheats::toggleShowEnemyProductivityOverlay()
     // In RTTR, the user must explicitly enable this feature after enabling cheats.
     if(isCheatModeOn())
         shouldShowEnemyProductivityOverlay_ = !shouldShowEnemyProductivityOverlay_;
+}
+
+bool Cheats::canBuildHQ(const MapPoint& mp) const
+{
+    // In S2, you can build headquarters in unoccupied territory at least 2 nodes away from any border markers and it
+    // doesn't need more bq than a hut.
+    return isCheatModeOn() && !world_.IsPointOrAnyNeighborOwned(mp) && world_.GetNode(mp).bq >= BuildingQuality::Hut;
+}
+
+void Cheats::buildHQ(const MapPoint& mp)
+{
+    if(canBuildHQ(mp))
+    {
+        // In S2, new HQs created in Roman-style campaigns had no resources.
+        // In RTTR, all new HQs will have default resources.
+        world_.DestroyNO(mp, /*checkExists*/ false); // if canBuildHQ is true then this is safe to destroy (due to bq)
+        constexpr auto playerId = 0;
+        BuildingFactory::CreateBuilding(world_, BuildingType::Headquarters, mp, playerId,
+                                        world_.GetPlayer(playerId).nation);
+    }
 }
 
 void Cheats::toggleHumanAIPlayer()

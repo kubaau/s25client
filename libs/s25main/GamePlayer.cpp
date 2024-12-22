@@ -15,6 +15,7 @@
 #include "WineLoader.h"
 #include "addons/const_addons.h"
 #include "buildings/noBuildingSite.h"
+#include "buildings/nobHQ.h"
 #include "buildings/nobHarborBuilding.h"
 #include "buildings/nobMilitary.h"
 #include "buildings/nobUsual.h"
@@ -431,8 +432,13 @@ void GamePlayer::AddBuilding(noBuilding* bld, BuildingType bldType)
         for(noShip* ship : ships)
             ship->NewHarborBuilt(static_cast<nobHarborBuilding*>(bld));
     } else if(bldType == BuildingType::Headquarters)
-        hqPos = bld->GetPos();
-    else if(BuildingProperties::IsMilitary(bldType))
+    {
+        // If there already is an HQ, keep the original position in hqPos and set the new HQ tent flag.
+        if(const nobHQ* currentHQ = GetHQ())
+            static_cast<nobHQ*>(bld)->SetIsTent(currentHQ->IsTent());
+        else // otherwise, update hqPos
+            hqPos = bld->GetPos();
+    } else if(BuildingProperties::IsMilitary(bldType))
     {
         auto* milBld = static_cast<nobMilitary*>(bld);
         // New built? -> Calculate frontier distance
@@ -1399,6 +1405,18 @@ void GamePlayer::TestDefeat()
     // Keine Militärgebäude, keine Lagerhäuser (HQ,Häfen) -> kein Land --> verloren
     if(!isDefeated && buildings.GetMilitaryBuildings().empty() && buildings.GetStorehouses().empty())
         Surrender();
+}
+
+nobHQ* GamePlayer::GetHQ()
+{
+    const MapPoint hqPos = GetHQPos();
+    return hqPos.isValid() ? GetGameWorld().GetSpecObj<nobHQ>(hqPos) : nullptr;
+}
+
+void GamePlayer::SetHQIsTent(bool isTent)
+{
+    if(nobHQ* hq = GetHQ())
+        hq->SetIsTent(isTent);
 }
 
 void GamePlayer::Surrender()

@@ -4,21 +4,24 @@
 
 #include "Cheats.h"
 #include "GamePlayer.h"
+#include "buildings/nobHQ.h"
 #include "desktops/dskGameInterface.h"
 #include "worldFixtures/CreateEmptyWorld.h"
 #include "worldFixtures/WorldFixture.h"
+#include "gameData/MilitaryConsts.h"
 #include <turtle/mock.hpp>
 
 BOOST_AUTO_TEST_SUITE(CheatsTests)
 
 namespace {
-constexpr auto numPlayers = 1;
+constexpr auto numPlayers = 2;
 constexpr auto worldWidth = 64;
 constexpr auto worldHeight = 64;
 struct CheatsFixture : WorldFixture<CreateEmptyWorld, numPlayers, worldWidth, worldHeight>
 {
     CheatsFixture()
-        : cheats{gameDesktop.GI_GetCheats()}, viewer{gameDesktop.GetView().GetViewer()}, p1HQPos{p1.GetHQPos()}
+        : cheats{gameDesktop.GI_GetCheats()}, viewer{gameDesktop.GetView().GetViewer()}, p1HQPos{p1.GetHQPos()},
+          p2HQPos{p2.GetHQPos()}
     {}
 
     dskGameInterface gameDesktop{game, nullptr, 0, false};
@@ -27,7 +30,25 @@ struct CheatsFixture : WorldFixture<CreateEmptyWorld, numPlayers, worldWidth, wo
 
     GamePlayer& getPlayer(unsigned id) { return world.GetPlayer(id); }
     GamePlayer& p1 = getPlayer(0);
+    GamePlayer& p2 = getPlayer(1);
+
     const MapPoint p1HQPos;
+    const MapPoint p2HQPos;
+
+    MapPoint unownedPt = {static_cast<MapCoord>(p1HQPos.x + HQ_RADIUS + 2), p1HQPos.y};
+
+    auto countHQs(const GamePlayer& player)
+    {
+        return player.GetBuildingRegister().GetBuildingNums().buildings[BuildingType::Headquarters];
+    }
+    auto getHQs(const GamePlayer& player)
+    {
+        std::vector<nobHQ*> ret;
+        for(auto bld : player.GetBuildingRegister().GetStorehouses())
+            if(bld->GetBuildingType() == BuildingType::Headquarters)
+                ret.push_back(static_cast<nobHQ*>(bld));
+        return ret;
+    }
 };
 } // namespace
 
@@ -136,6 +157,60 @@ BOOST_FIXTURE_TEST_CASE(CanToggleAllBuildingsEnabled_AndShowEnemyProductivityOve
     cheats.toggleShowEnemyProductivityOverlay();
     BOOST_TEST_REQUIRE(cheats.areAllBuildingsEnabled() == true);
     BOOST_TEST_REQUIRE(cheats.shouldShowEnemyProductivityOverlay() == true);
+}
+
+BOOST_FIXTURE_TEST_CASE(CanBuildHQOutsideOwnedTerritory_AndDistanceFromBorderShouldBeAtLeastTwo, CheatsFixture)
+{
+    // cheats not enabled - cannot place
+    BOOST_TEST_REQUIRE(cheats.canBuildHQ(unownedPt) == false);
+
+    cheats.toggleCheatMode();
+
+    // not in P1 territory
+    MapPoint p1territory = p1HQPos;
+    p1territory.x += 3;
+    p1territory.y += 3;
+    BOOST_TEST_REQUIRE(cheats.canBuildHQ(p1territory) == false);
+
+    // not in P2 territory
+    MapPoint p2territory = p2HQPos;
+    p2territory.x += 3;
+    p2territory.y += 3;
+    BOOST_TEST_REQUIRE(cheats.canBuildHQ(p2territory) == false);
+
+    // not at border
+    MapPoint border = p1HQPos;
+    border.x += HQ_RADIUS;
+    BOOST_TEST_REQUIRE(cheats.canBuildHQ(border) == false);
+
+    // not one node further from the border
+    MapPoint nodeBeyondBorder = border;
+    ++border.x;
+    BOOST_TEST_REQUIRE(cheats.canBuildHQ(nodeBeyondBorder) == false);
+
+    // further away - OK
+    BOOST_TEST_REQUIRE(cheats.canBuildHQ(unownedPt) == true);
+}
+
+BOOST_FIXTURE_TEST_CASE(PlacesHQWithTheSameNationAndTentFlag, CheatsFixture)
+{
+    p1.SetHQIsTent(true);
+
+    // initially 1 HQ
+    BOOST_TEST_REQUIRE(countHQs(p1) == 1);
+
+    cheats.buildHQ(unownedPt);
+    BOOST_TEST_REQUIRE(countHQs(p1) == 1); // still 1 HQ - cheats are off
+
+    // enable cheats and place HQ
+    cheats.toggleCheatMode();
+    cheats.buildHQ(unownedPt);
+    BOOST_TEST_REQUIRE(countHQs(p1) == 2);
+    for(auto bld : getHQs(p1))
+    {
+        BOOST_TEST_REQUIRE((bld->GetNation() == p1.nation) == true);
+        BOOST_TEST_REQUIRE(static_cast<nobHQ*>(bld)->IsTent() == true);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
