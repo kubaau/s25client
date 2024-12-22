@@ -9,6 +9,8 @@
 #include "network/GameClient.h"
 #include "world/GameWorldBase.h"
 
+using namespace std::literals;
+
 Cheats::Cheats(GameWorldBase& world) : world_(world) {}
 
 bool Cheats::areCheatsAllowed() const
@@ -84,6 +86,31 @@ void Cheats::buildHQ(const MapPoint& mp)
     }
 }
 
+void Cheats::setGameSpeed(GameSpeed speed)
+{
+    if(isCheatModeOn())
+    {
+        FramesInfo::milliseconds32_t gfLengthReq;
+        unsigned framesToSkipOnEachDraw = 0;
+
+        switch(speed)
+        {
+            case GameSpeed::SPEED_1:
+            default: gfLengthReq = 50ms; break;
+            case GameSpeed::SPEED_2: gfLengthReq = 30ms; break;
+            case GameSpeed::SPEED_3: gfLengthReq = 20ms; break;
+            case GameSpeed::SPEED_4: gfLengthReq = 10ms; break;
+            case GameSpeed::SPEED_5: gfLengthReq = 1ms; break;
+            case GameSpeed::SPEED_6:
+                gfLengthReq = 1ms;
+                framesToSkipOnEachDraw = 10;
+                break;
+        }
+
+        GAMECLIENT.SetGFLengthReq(gfLengthReq, /*enforceReleaseLimit*/ false, framesToSkipOnEachDraw);
+    }
+}
+
 void Cheats::toggleHumanAIPlayer()
 {
     if(isCheatModeOn() && !GAMECLIENT.IsReplayModeOn())
@@ -107,6 +134,8 @@ void Cheats::turnAllCheatsOff()
         toggleAllBuildingsEnabled();
     if(shouldShowEnemyProductivityOverlay_)
         toggleShowEnemyProductivityOverlay();
+    if(GAMECLIENT.framesToSkipOnEachDraw_)
+        GAMECLIENT.SetGFLengthReq(1ms);
     if(isHumanAIPlayer_)
         toggleHumanAIPlayer();
 }

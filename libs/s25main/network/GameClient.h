@@ -127,8 +127,14 @@ public:
     /// And a 2nd time when the GUI is ready which actually starty the game
     void OnGameStart();
 
+    // Used by + and v
     void IncreaseSpeed();
+    // Used by -
     void DecreaseSpeed();
+    // Used by ALT+1 through ALT+6 (cheats)
+    void SetGFLengthReq(FramesInfo::milliseconds32_t, bool enforceReleaseLimit = true,
+                        unsigned framesToSkipOnEachDraw = 0);
+    FramesInfo::milliseconds32_t GetGFLengthReq() const { return framesinfo.gfLengthReq; }
 
     /// Lädt ein Replay und startet dementsprechend das Spiel
     bool StartReplay(const boost::filesystem::path& path);
@@ -271,6 +277,7 @@ public:
     VisualSettings visual_settings, default_settings; //-V730_NOINIT
     /// skip ahead how many gf?
     unsigned skiptogf;
+    unsigned framesToSkipOnEachDraw_ = 0;
 
 private:
     NetworkPlayer mainPlayer;

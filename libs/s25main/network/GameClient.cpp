@@ -1148,47 +1148,58 @@ bool GameClient::OnGameMessage(const GameMessage_GameCommand& msg)
 
 void GameClient::IncreaseSpeed()
 {
-    const bool debugMode =
-#ifndef NDEBUG
-      true;
-#else
-      false;
-#endif
-    if(framesinfo.gfLengthReq > FramesInfo::milliseconds32_t(10))
-        framesinfo.gfLengthReq -= FramesInfo::milliseconds32_t(10);
-    else if((replayMode || debugMode) && framesinfo.gfLengthReq == FramesInfo::milliseconds32_t(10))
-        framesinfo.gfLengthReq = FramesInfo::milliseconds32_t(1);
-    else
-        framesinfo.gfLengthReq = FramesInfo::milliseconds32_t(70);
-
-    if(replayMode)
-        framesinfo.gf_length = framesinfo.gfLengthReq;
-    else
-        mainPlayer.sendMsgAsync(new GameMessage_Speed(framesinfo.gfLengthReq.count()));
+    //  1..10 -> 0
+    // 11..20 -> 10
+    // 21..30 -> 20 etc.
+    SetGFLengthReq((framesinfo.gfLengthReq - 1ms) / 10 * 10);
 }
 
 void GameClient::DecreaseSpeed()
 {
-    const bool debugMode =
+    //  1.. 9 -> 10
+    // 10..19 -> 20
+    // 20..29 -> 30 etc.
+    SetGFLengthReq(framesinfo.gfLengthReq / 10 * 10 + 10ms);
+}
+
+void GameClient::SetGFLengthReq(FramesInfo::milliseconds32_t gfLengthReq, bool enforceReleaseLimit,
+                                unsigned framesToSkipOnEachDraw)
+{
 #ifndef NDEBUG
-      true;
+    constexpr auto minLength = 1ms;
 #else
-      false;
+    const auto minLength = IsReplayModeOn() || !enforceReleaseLimit ? 1ms : 10ms;
 #endif
 
-    FramesInfo::milliseconds32_t maxSpeed(replayMode ? 1000 : 70);
+    const auto maxLength = IsReplayModeOn() ? 1000ms : 70ms;
 
-    if(framesinfo.gfLengthReq == maxSpeed)
-        framesinfo.gfLengthReq = FramesInfo::milliseconds32_t(replayMode || debugMode ? 1 : 10);
-    else if(framesinfo.gfLengthReq == FramesInfo::milliseconds32_t(1))
-        framesinfo.gfLengthReq = FramesInfo::milliseconds32_t(10);
-    else
-        framesinfo.gfLengthReq += FramesInfo::milliseconds32_t(10);
+    if(gfLengthReq == 0ms)
+    {
+        // already at minimum? wrap around from min to max
+        if(framesinfo.gfLengthReq <= minLength)
+            framesinfo.gfLengthReq = maxLength;
+        else // treat set 0 as set minimum
+            framesinfo.gfLengthReq = minLength;
+    } else if(gfLengthReq < minLength) // clamp to min
+    {
+        framesinfo.gfLengthReq = minLength;
+    } else if(gfLengthReq > maxLength)
+    {
+        // already at maximum? wrap around from max to min
+        if(framesinfo.gfLengthReq >= maxLength)
+            framesinfo.gfLengthReq = minLength;
+        else // clamp to max
+            framesinfo.gfLengthReq = maxLength;
+    } else
+        framesinfo.gfLengthReq = gfLengthReq;
 
-    if(replayMode)
+    if(IsReplayModeOn())
         framesinfo.gf_length = framesinfo.gfLengthReq;
     else
         mainPlayer.sendMsgAsync(new GameMessage_Speed(framesinfo.gfLengthReq.count()));
+
+    framesToSkipOnEachDraw_ = framesToSkipOnEachDraw;
+    skiptogf = 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1220,6 +1231,9 @@ bool GameClient::OnGameMessage(const GameMessage_Pause& msg)
     if(framesinfo.isPaused == msg.paused)
         return true;
     framesinfo.isPaused = msg.paused;
+
+    if(framesToSkipOnEachDraw_)
+        skiptogf = 0;
 
     LOG.writeToFile("<<< NMS_NFC_PAUSE(%1%)\n") % msg.paused;
 
@@ -1279,6 +1293,9 @@ void GameClient::ExecuteGameFrame()
         else
             return; // Pause
     }
+
+    if(!skiptogf && framesToSkipOnEachDraw_)
+        skiptogf = GetGFNumber() + framesToSkipOnEachDraw_;
 
     const unsigned curGF = GetGFNumber();
     const bool isSkipping = skiptogf > curGF;

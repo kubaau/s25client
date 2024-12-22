@@ -31,6 +31,17 @@ public:
     bool canBuildHQ(const MapPoint& mp) const;
     void buildHQ(const MapPoint& mp);
 
+    enum class GameSpeed
+    {
+        SPEED_1,
+        SPEED_2,
+        SPEED_3,
+        SPEED_4,
+        SPEED_5,
+        SPEED_6
+    };
+    void setGameSpeed(GameSpeed speed);
+
     // RTTR cheats
     void toggleHumanAIPlayer();
     void armageddon() const;

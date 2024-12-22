@@ -21,7 +21,7 @@ void CheatCommandTracker::onKeyEvent(const KeyEvent& ke)
     if(!cheats_.areCheatsAllowed())
         return;
 
-    if(checkSpecialKeyEvent(ke))
+    if(checkSpecialKeyEvent(ke) || checkSpeedKeyEvent(ke))
         lastChars_.clear();
     else
         onCharKeyEvent(ke);
@@ -53,6 +53,17 @@ bool CheatCommandTracker::checkSpecialKeyEvent(const KeyEvent& ke)
     }
 
     return true;
+}
+
+bool CheatCommandTracker::checkSpeedKeyEvent(const KeyEvent& ke)
+{
+    const char c = ke.c;
+    if(ke.alt && c >= '1' && c <= '6')
+    {
+        cheats_.setGameSpeed(Cheats::GameSpeed{c - '1'});
+        return true;
+    }
+    return false;
 }
 
 void CheatCommandTracker::onCharKeyEvent(const KeyEvent& ke)

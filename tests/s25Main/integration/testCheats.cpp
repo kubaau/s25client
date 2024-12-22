@@ -6,6 +6,7 @@
 #include "GamePlayer.h"
 #include "buildings/nobHQ.h"
 #include "desktops/dskGameInterface.h"
+#include "network/GameClient.h"
 #include "worldFixtures/CreateEmptyWorld.h"
 #include "worldFixtures/WorldFixture.h"
 #include "gameData/MilitaryConsts.h"
@@ -71,14 +72,17 @@ BOOST_FIXTURE_TEST_CASE(TurningCheatModeOffDisablesAllCheats, CheatsFixture)
     cheats.toggleAllVisible();
     cheats.toggleAllBuildingsEnabled();
     cheats.toggleShowEnemyProductivityOverlay();
+    cheats.setGameSpeed(Cheats::GameSpeed::SPEED_6);
     BOOST_TEST_REQUIRE(cheats.isAllVisible() == true);
     BOOST_TEST_REQUIRE(cheats.areAllBuildingsEnabled() == true);
     BOOST_TEST_REQUIRE(cheats.shouldShowEnemyProductivityOverlay() == true);
+    BOOST_TEST_REQUIRE(GAMECLIENT.framesToSkipOnEachDraw_ > 0);
 
     cheats.toggleCheatMode();
     BOOST_TEST_REQUIRE(cheats.isAllVisible() == false);
     BOOST_TEST_REQUIRE(cheats.areAllBuildingsEnabled() == false);
     BOOST_TEST_REQUIRE(cheats.shouldShowEnemyProductivityOverlay() == false);
+    BOOST_TEST_REQUIRE(GAMECLIENT.framesToSkipOnEachDraw_ == 0);
     // testing toggleHumanAIPlayer would require GameClient::state==Loaded, which is guaranteed in code (because Cheats
     // only exist after the game is loaded) but is not the case in tests - skipping
 }
@@ -211,6 +215,21 @@ BOOST_FIXTURE_TEST_CASE(PlacesHQWithTheSameNationAndTentFlag, CheatsFixture)
         BOOST_TEST_REQUIRE((bld->GetNation() == p1.nation) == true);
         BOOST_TEST_REQUIRE(static_cast<nobHQ*>(bld)->IsTent() == true);
     }
+}
+
+BOOST_FIXTURE_TEST_CASE(CanChangeGameSpeed_IfCheatModeIsOn, CheatsFixture)
+{
+    const auto initialGFLengthReq = GAMECLIENT.GetGFLengthReq();
+    cheats.setGameSpeed(Cheats::GameSpeed::SPEED_6);
+    // no change - cheats are off
+    BOOST_TEST_REQUIRE(GAMECLIENT.GetGFLengthReq().count() == initialGFLengthReq.count());
+    BOOST_TEST_REQUIRE(GAMECLIENT.framesToSkipOnEachDraw_ == 0);
+
+    cheats.toggleCheatMode();
+    cheats.setGameSpeed(Cheats::GameSpeed::SPEED_6);
+    BOOST_TEST_REQUIRE(GAMECLIENT.framesToSkipOnEachDraw_ > 0);
+    cheats.setGameSpeed(Cheats::GameSpeed::SPEED_1);
+    BOOST_TEST_REQUIRE(GAMECLIENT.framesToSkipOnEachDraw_ == 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -105,7 +105,8 @@ bool GameManager::Run()
     GAMECLIENT.Run();
     GAMESERVER.Run();
 
-    if(targetSkipGF)
+    if(targetSkipGF
+       && !GAMECLIENT.framesToSkipOnEachDraw_) // don't spam these logs if using cheats to achieve hyperspeed
     {
         // if we skip drawing write a comment every 5k gf
         unsigned current_time = videoDriver_.GetTickCount();
@@ -142,7 +143,7 @@ bool GameManager::Run()
                 log_.write(_("jump to gf %1% complete\n")) % targetSkipGF;
             }
         }
-    } else
+    } else if(!targetSkipGF)
     {
         videoDriver_.ClearScreen();
         windowManager_.Draw();
