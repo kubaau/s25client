@@ -60,9 +60,10 @@ void Cheats::toggleShowEnemyProductivityOverlay()
 
 bool Cheats::canBuildHQ(const MapPoint& mp) const
 {
-    // In S2, you can build headquarters in unoccupied territory at least 2 nodes away from any border markers and it
-    // doesn't need more bq than a hut.
-    return isCheatModeOn() && !world_.IsPointOrAnyNeighborOwned(mp) && world_.GetNode(mp).bq >= BuildingQuality::Hut;
+    // In S2, you can build headquarters in unoccupied territory at least 2 nodes away from any border markers
+    // and it doesn't need more bq than a hut.
+    // In RTTR, the first requirement is unchanged, but the minimum bq needed is castle.
+    return isCheatModeOn() && !world_.IsPointOrAnyNeighborOwned(mp) && world_.GetNode(mp).bq >= BuildingQuality::Castle;
 }
 
 void Cheats::buildHQ(const MapPoint& mp)
