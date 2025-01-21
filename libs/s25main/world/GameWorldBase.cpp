@@ -64,6 +64,12 @@ unsigned GameWorldBase::GetNumPlayers() const
     return players.size();
 }
 
+void GameWorldBase::ForEachPlayer(std::function<void(GamePlayer&)> function)
+{
+    for(auto& player : players)
+        function(player);
+}
+
 bool GameWorldBase::IsSinglePlayer() const
 {
     bool foundPlayer = false;
