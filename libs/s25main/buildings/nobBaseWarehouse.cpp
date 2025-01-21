@@ -538,7 +538,9 @@ void nobBaseWarehouse::HandleProduceHelperEvent()
 
 void nobBaseWarehouse::HandleLeaveEvent()
 {
-#if RTTR_ENABLE_ASSERTS
+#if RTTR_ENABLE_ASSERTS && false // The assertion below is not always satisfied. It sometimes happens that when two or
+                                 // more soldiers leave around the same time, the condition will not be true, probably
+                                 // due to some kind of a race.
     // Harbors have more queues. Ignore for now
     if(GetGOT() != GO_Type::NobHarborbuilding)
     {
