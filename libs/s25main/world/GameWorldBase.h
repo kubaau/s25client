@@ -158,6 +158,10 @@ public:
     GamePlayer& GetPlayer(unsigned id);
     const GamePlayer& GetPlayer(unsigned id) const;
     unsigned GetNumPlayers() const;
+
+    /// Run function for every player
+    void ForEachPlayer(std::function<void(GamePlayer&)> function);
+
     bool IsSinglePlayer() const;
     /// Return the game settings
     const GlobalGameSettings& GetGGS() const { return gameSettings; }

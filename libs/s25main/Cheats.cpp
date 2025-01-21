@@ -83,6 +83,12 @@ void Cheats::placeCheatBuilding(const MapPoint& mp, const GamePlayer& player)
     auto* hq =
       BuildingFactory::CreateBuilding(world_, BuildingType::Headquarters, mp, player.GetPlayerId(), player.nation);
     static_cast<nobHQ*>(hq)->SetIsTent(player.IsHQTent());
+
+    // If the following code wasn't there, one could build an HQ right at the enemy border and their military flags
+    // wouldn't be updated. One could attempt a refactor of LookForEnemyBuildings, but it is simpler just to
+    // recalculate the flags for everyone, since building an HQ can destroy a lot of stuff anyway and is rarely
+    // done.
+    world_.ForEachPlayer([](auto& player) { player.RecalcMilitaryFlags(); });
 }
 
 void Cheats::toggleHumanAIPlayer()
