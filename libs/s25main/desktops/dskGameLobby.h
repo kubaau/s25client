@@ -41,6 +41,7 @@ private:
     void ChangeTeam(unsigned player, Team);
     void ChangeReady(unsigned player, bool ready);
     void ChangeNation(unsigned player, Nation);
+    void ChangePortrait(unsigned player, unsigned portraitIndex);
     void ChangePing(unsigned playerId);
     void ChangeColor(unsigned player, unsigned color);
 
@@ -82,7 +83,9 @@ private:
     bool checkOptions();
 
     void GoBack();
-    bool IsSinglePlayer() { return serverType == ServerType::Local; }
+    bool IsSinglePlayer() const { return serverType == ServerType::Local; }
+    /// Check whether the given setting can be changed, i.e. is not disabled by lua
+    bool IsChangeAllowed(const std::string& setting) const;
 
     const ServerType serverType;
     std::shared_ptr<GameLobby> gameLobby_;
@@ -90,7 +93,7 @@ private:
     std::unique_ptr<ILobbyClient> lobbyClient_;
     bool hasCountdown_;
     std::unique_ptr<LuaInterfaceSettings> lua;
-    std::unique_ptr<GameLobbyController> lobbyHostController;
+    std::unique_ptr<GameLobbyController> lobbyController;
     bool wasActivated, allowAddonChange;
     ctrlChat *gameChat, *lobbyChat;
     unsigned lobbyChatTabAnimId, localChatTabAnimId;

@@ -119,6 +119,7 @@ public:
 
     void Command_Chat(const std::string& text, ChatDestination cd);
     void Command_SetNation(Nation newNation);
+    void Command_SetPortrait(unsigned portraitIndex);
     void Command_SetTeam(Team newTeam);
     void Command_SetColor(unsigned newColor);
     void Command_SetReady(bool isReady);
@@ -127,7 +128,7 @@ public:
     /// And a 2nd time when the GUI is ready which actually starty the game
     void OnGameStart();
 
-    void IncreaseSpeed();
+    void IncreaseSpeed(bool wraparound = false);
     void DecreaseSpeed();
 
     /// Lädt ein Replay und startet dementsprechend das Spiel
@@ -140,9 +141,9 @@ public:
 
     void SetPause(bool pause);
     void TogglePause() { SetPause(!framesinfo.isPaused); }
-    /// Schaltet FoW im Replaymodus ein/aus
-    void ToggleReplayFOW();
-    /// Prüft, ob FoW im Replaymodus ausgeschalten ist
+    /// Hide or show the fog-of-war. Only in replay mode
+    void SetReplayFOW(bool hideFOW);
+    /// Return whether we are in replay mode and fog-of-war is disabled
     bool IsReplayFOWDisabled() const;
     /// Gibt Replay-Ende (GF) zurück
     unsigned GetLastReplayGF() const;
@@ -220,6 +221,7 @@ private:
     bool OnGameMessage(const GameMessage_Player_Id& msg) override;
     bool OnGameMessage(const GameMessage_Player_List& msg) override;
     bool OnGameMessage(const GameMessage_Player_Name& msg) override;
+    bool OnGameMessage(const GameMessage_Player_Portrait& msg) override;
     bool OnGameMessage(const GameMessage_Player_State& msg) override;
     bool OnGameMessage(const GameMessage_Player_Nation& msg) override;
     bool OnGameMessage(const GameMessage_Player_Team& msg) override;

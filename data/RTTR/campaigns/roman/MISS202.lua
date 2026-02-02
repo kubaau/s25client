@@ -21,7 +21,7 @@ function isMapPreviewEnabled()
     return false
 end
 
-local requiredFeature = 4
+local requiredFeature = 6
 function checkVersion()
     local featureLevel = rttr:GetFeatureLevel()
     if(featureLevel < requiredFeature) then
@@ -30,7 +30,7 @@ function checkVersion()
 end
 -------------------------------- mission events and texts ---------------------
 -- Message-Window (mission statement and hints): 52 chars wide
-eIdx = {1, 2, 3, 98, 99}
+eIdx = {1, 2, 3, 99}
 
 rttr:RegisterTranslations(
 {
@@ -60,7 +60,7 @@ rttr:RegisterTranslations(
         msg2    = '23.Tag im 12.Monat des 3.Jahres.\n\nWir sind auf die Nubier getroffen. Sie verhalten\nsich sehr drohend, aber noch nicht offen aggressiv.\nDas wird wahrscheinlich nicht lange so bleiben. Wir\nsollten einen Spähturm bauen, um ihr Land besser\nüberwachen zu können.\n\nDie Berichte von den reichen Goldvorkommen scheinen\nzu stimmen. Ihr Häuptling stolziert in seinem\nGoldschmuck einher wie ein Pfau.',
         msgh2   = 'Suchen Sie nach dem Tor.',
 
-        msg3    = 'Erster Tag des zweiten Monats \nim 4.Jahr der Landung. \n\nDer Stamm im Norden versperrt uns den Weg zu einem\nweiteren Tor. Auch er betrachtet dieses als sein\nHeiligtum. Uns bleibt wieder nichts anderes übrig,\nals zu kämpfen.',
+        msg3    = 'Erster Tag des zweiten Monats\nim 4.Jahr der Landung.\n\nDer Stamm im Norden versperrt uns den Weg zu einem\nweiteren Tor. Auch er betrachtet dieses als sein\nHeiligtum. Uns bleibt wieder nichts anderes übrig,\nals zu kämpfen.',
         msgh3   = 'Suchen Sie nach dem Tor im Norden.',
 
         msg99   = 'Wir haben das Tor erreicht und aktiviert. Wir wissen\nnicht, wohin uns der nächste Schritt führt, aber wir\nwerden ihn gehen.',
@@ -81,6 +81,22 @@ rttr:RegisterTranslations(
 
         msg99   = 'We have reached the gateway and activated it. We\nknow not where our next step will take us, but we\nshall go on.',
         msgh99  = 'You have completed this mission.\nThe next Chapter awaits you... '
+    },
+    pl =
+    { 
+        Diary   = 'Dziennik',
+
+        msg1    = 'Siedemnasty Dzień Trzeciego Miesiąca Trzeciego Roku.\n\nPopadliśmy już w coś na kształt rutyny w przygotowywaniu nowej osady.\n\nMam nadzieję, że tym razem wszystko pójdzie jak należy.\n\nNatknęliśmy się na kolejnego rozbitka. Ostrzegł nas przed wrogimi plemionami Nubijczyków na wschodzie wyspy.\n\nW górach na wschodzie rzekomo znajdują się również bogate złoża złota. Jest tylko jeden sposób, aby sprawdzić, ile warte są te plotki.\n\nCzłowiek ten nie wiedział nic o wrotach, gdyż znał jedynie niewielką część wyspy.',
+        msgh1   = 'Przesuwaj się na wschód.',
+
+        msg2    = 'Dwudziesty Trzeci Dzień Dwunastego Miesiąca Trzeciego Roku.\n\nNawiązaliśmy kontakt z Nubijczykami.\n\nIch postawa jest wroga, ale nie otwarcie agresywne.\n\nGotowym iść o zakład, że ich zachowanie wkrótce zmieni się. Na gorsze.\n\nPowinniśmy zbudować wieżę obserwacyjną, aby móc lepiej kontrolować ich poczynania.\n\nPogłoski o bogatych złożach złota wydają się być prawdziwe.\n\nWódz Nubijczyków paraduje w swojej złotej biżuterii niczym paw.',
+        msgh2   = 'Szukaj wrót.',
+
+        msg3    = 'Pierwszy Dzień Drugiego Miesiąca Czwartego Roku od przybycia na brzeg.\n\nPlemię na północy blokuje nam drogę do kolejnych wrót.\n\nOni także pojmują ją jako swe święte miejsce.\n\nNie mamy wyboru. Będziemy walczyć.',
+        msgh3   = 'Zdobądź dostęp do wrót na północy.',
+
+        msg99   = 'Dotarliśmy do wrót i je aktywowaliśmy.\n\nNie wiemy, dokąd dotrzemy tym razem, lecz nie zamierzamy się zatrzymać.',
+        msgh99  = 'Ukończyłeś tę misję.\nNastępny rozdział czeka na ciebie...'
     }
 })
 
@@ -115,17 +131,20 @@ function onSettingsReady()
 
     rttr:GetPlayer(0):SetNation(NAT_ROMANS)     -- nation
     rttr:GetPlayer(0):SetColor(0)               -- 0:blue, 1:read, 2:yellow, 
+    rttr:GetPlayer(0):SetPortrait(0)
 
     rttr:GetPlayer(1):SetAI(3)                  -- hard AI
     rttr:GetPlayer(1):SetNation(NAT_AFRICANS)   -- nation
     rttr:GetPlayer(1):SetColor(1)               -- yellow
     rttr:GetPlayer(1):SetName('Mnga Tscha')     -- Enemy Name
+    rttr:GetPlayer(1):SetPortrait(11)
     rttr:GetPlayer(1):SetTeam(TM_TEAM1)
 
     rttr:GetPlayer(2):SetAI(3)                  -- hard AI
     rttr:GetPlayer(2):SetNation(NAT_AFRICANS)   -- nation
     rttr:GetPlayer(2):SetColor(2)               -- red
     rttr:GetPlayer(2):SetName('Todo')           -- Enemy Name
+    rttr:GetPlayer(2):SetPortrait(10)
     rttr:GetPlayer(2):SetTeam(TM_TEAM1)
 end
 
@@ -135,9 +154,11 @@ function getAllowedChanges()
         ["ownNation"]   = false,
         ["ownColor"]    = false,
         ["ownTeam"]     = false,
-        ["aiNation"]    = false, 
+        ["ownPortrait"] = false,
+        ["aiNation"]    = false,
         ["aiColor"]     = false,
-        ["aiTeam"]      = false
+        ["aiTeam"]      = false,
+        ["aiPortrait"]  = false
     }
 end
 
@@ -162,6 +183,9 @@ function onStart(isFirstStart)
         eHist = {["n"] = 0}
         MissionEvent(1)                     -- initial event / start screen
     end
+
+    rttr:GetWorld():SetComputerBarrier(6, 70, 71)
+    rttr:GetWorld():SetComputerBarrier(6, 59, 60)
 
     if isFirstStart then
         -- type 8 == 7 in rttr
@@ -239,26 +263,6 @@ function addPlayerBld(p, onLoad)
 
     if(p == 0) then
         rttr:GetPlayer(p):DisableBuilding(BLD_LOOKOUTTOWER, false)
-
-    else
-        rttr:GetPlayer(p):SetRestrictedArea(
-            nil, nil,       -- enable the whole map
-                0,   0,
-                0,   127,
-                127, 127,
-                127, 0,
-            nil, nil,       -- R=6, X=70, Y=71 V R=6, X=59, Y=60
-                73,  65,
-                76,  71,
-                73,  77,
-                67,  77,
-                56,  66,
-                53,  60,
-                56,  54,
-                62,  54,
-                73,  65,
-            nil, nil
-        )
     end
 end
 
@@ -492,10 +496,6 @@ function onOccupied(p, x, y)
 
     if( (x == 89) and (y == 20) ) then MissionEvent(99)
     end
-
-    if(not rttr:GetPlayer(1):IsInRestrictedArea(x, y)) then 
-        MissionEvent(98) -- for lifting restrictions
-    end
 end
 
 function onExplored(p, x, y, o)
@@ -515,10 +515,6 @@ function MissionEvent(e, onLoad)
     -- call side effects for active events, check "eState[e] == 1" for multiple call events!
     if(e == 2) then
         rttr:GetPlayer(0):EnableBuilding(BLD_LOOKOUTTOWER, not onLoad)
-        
-    elseif(e == 98) then
-        rttr:GetPlayer(1):SetRestrictedArea()
-        rttr:GetPlayer(2):SetRestrictedArea()
 
     elseif(e == 99) then
         -- TODO: EnableNextMissions()

@@ -1,4 +1,4 @@
-// Copyright (C) 2005 - 2021 Settlers Freaks (sf-team at siedler25.org)
+// Copyright (C) 2005 - 2024 Settlers Freaks (sf-team at siedler25.org)
 //
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -49,6 +49,7 @@ private:
 public:
     Ware(GoodType type, noBaseBuilding* goal, noRoadNode* location);
     Ware(SerializedGameData& sgd, unsigned obj_id);
+    Ware(const Ware&) = delete;
 
     ~Ware() override;
 
@@ -82,6 +83,7 @@ public:
     bool IsWaitingAtFlag() const { return (state == State::WaitAtFlag); }
     bool IsWaitingInWarehouse() const { return (state == State::WaitInWarehouse); }
     bool IsWaitingForShip() const { return (state == State::WaitForShip); }
+    bool IsCarried() const { return (state == State::Carried); }
     /// Sagt dem Träger Bescheid, dass sie in die aktuelle (next_dir) Richtung nicht mehr getragen werden will
     void RemoveWareJobForDir(RoadPathDirection last_next_dir);
     /// Überprüft, ob es noch ein Weg zum Ziel gibt
@@ -98,7 +100,7 @@ public:
     noRoadNode* GetLocation() { return location; }
     const noRoadNode* GetLocation() const { return location; }
     /// Ist die Ware eine LostWare (Ware, die kein Ziel mehr hat und irgendwo sinnlos rumliegt)?
-    bool IsLostWare() const { return ((goal ? false : true) && state != State::OnShip); }
+    bool IsLostWare() const { return ((goal == nullptr) && state != State::OnShip); }
     /// Informiert Ware, dass eine Schiffsreise beginnt
     void StartShipJourney();
     /// Informiert Ware, dass Schiffsreise beendet ist und die Ware nun in einem Hafengebäude liegt
@@ -126,6 +128,7 @@ public:
             case GoodType::Flour: return ("GoodType::Flour");
             case GoodType::Gold: return ("GoodType::Gold");
             case GoodType::Grain: return ("GoodType::Grain");
+            case GoodType::Grapes: return ("GoodType::Grapes");
             case GoodType::Ham: return ("GoodType::Ham");
             case GoodType::Hammer: return ("GoodType::Hammer");
             case GoodType::Iron: return ("GoodType::Iron");
@@ -147,6 +150,7 @@ public:
             case GoodType::Tongs: return ("GoodType::Tongs");
             case GoodType::Water: return ("GoodType::Water");
             case GoodType::WaterEmpty: return ("GoodType::WaterEmpty");
+            case GoodType::Wine: return ("GoodType::Wine");
             case GoodType::Wood: return ("GoodType::Wood");
         }
         RTTR_Assert(false);

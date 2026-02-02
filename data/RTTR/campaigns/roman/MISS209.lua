@@ -21,7 +21,7 @@ function isMapPreviewEnabled()
     return false
 end
 
-local requiredFeature = 4
+local requiredFeature = 6
 function checkVersion()
     local featureLevel = rttr:GetFeatureLevel()
     if(featureLevel < requiredFeature) then
@@ -30,7 +30,7 @@ function checkVersion()
 end
 -------------------------------- mission events and texts ---------------------
 -- Message-Window (mission statement and hints): 52 chars wide
-eIdx = {1, 2, 98, 99}
+eIdx = {1, 2, 99}
 
 rttr:RegisterTranslations(
 {
@@ -73,6 +73,19 @@ rttr:RegisterTranslations(
         msg99   = 'Last Day of the 10th Year.\nLast entry of Octavius in this Diary\n\nWe have succeeded. Tomorrow we shall return to Rome\nexactly ten years after becoming castaways on this\nisland. Ten years during which we traveled in the\nfootsteps of our forefathers. Ten years during which\nwe learned what made Rome so great. We shall offer a\ngreat feast of thanks to the gods and will see our\nfamilies and friends again.\nI can hardly wait.',
         msgh99  = 'You have succeeded!'
     },
+    pl =
+    { 
+        Diary   = 'Dziennik',
+
+        msg1    = 'Powietrze przepełnione jest aurą oczekiwania, ale także swego rodzaju niepokojem, podczas gdy przygotowujemy się do rozpoczęcia ostatniego i najbardziej niebezpiecznego rozdziału naszej długiej podróży do domu.\n\nCzy kiedykolwiek zobaczymy Rzym ponownie?\n\nMusimy zebrać całą naszą siłę, ponieważ ta wyspa wydaje się być naszą najlepszą szansą...',
+        msgh1   = 'Bądź bardzo ostrożny. Nie atakuj, dopóki nie będziesz pewien, że możesz pokonać obu wrogów.',
+
+        msg2    = 'Siedemnasty Dzień Szóstego Miesiąca Dziesiątego Roku.\n\nRzymianie faktycznie stoją przed dziesiątą bramą.\nNie są wcale przyjaźni.\n\nMoże są drugą stroną medalu, wrogim bratem Remusem.\nByć może ich brama to ta, która zabierze nas z powrotem do ukochanego Rzymu.\n\nJak mówi stara legenda:\n\n\"Dla dobra Rzymu brat walczyć będzie przeciwko bratu.\"\n\nPrzez prawie dziesięć lat nieustannie marzyliśmy o naszej ojczyźnie.\n\nNie poddamy się teraz.',
+        msgh2   = 'Zbierz wszystkie swoje siły, aby się przebić!\nZdobądź bramę!',
+
+        msg99   = 'Ostatni Dzień Dziesiątego Roku.\nOstatni wpis Oktawiusza w tym dzienniku.\n\nUdało się. Jutro wrócimy do Rzymu - równo dziesięć lat po tym, jak staliśmy się rozbitkami na wyspie.\n\nDziesięć lat, podczas których podążaliśmy śladami naszych przodków.\n\nDziesięć lat, podczas których nauczyliśmy się, co uczyniło Rzym wielkim.\n\nWyprawimy bogom wielką ucztę dziękczynną i ponownie zobaczymy nasze rodziny oraz przyjaciół.\n\nNie mogę się doczekać.',
+        msgh99  = 'Udało ci się!'
+    }
 })
 
 -- format mission texts
@@ -105,17 +118,20 @@ function onSettingsReady()
 
     rttr:GetPlayer(0):SetNation(NAT_ROMANS)     -- nation
     rttr:GetPlayer(0):SetColor(0)               -- 0:blue, 1:read, 2:yellow, 
+    rttr:GetPlayer(0):SetPortrait(0)
 
     rttr:GetPlayer(1):SetAI(3)                  -- hard AI
     rttr:GetPlayer(1):SetNation(NAT_ROMANS)     -- nation
     rttr:GetPlayer(1):SetColor(1)               -- yellow
     rttr:GetPlayer(1):SetName('Brutus')         -- Enemy Name
+    rttr:GetPlayer(1):SetPortrait(2)
     rttr:GetPlayer(1):SetTeam(TM_TEAM1)
 
     rttr:GetPlayer(2):SetAI(3)                  -- hard AI
     rttr:GetPlayer(2):SetNation(NAT_VIKINGS)    -- nation
     rttr:GetPlayer(2):SetColor(2)               -- red
     rttr:GetPlayer(2):SetName('Olof')           -- Enemy Name
+    rttr:GetPlayer(2):SetPortrait(5)
     rttr:GetPlayer(2):SetTeam(TM_TEAM1)
 end
 
@@ -140,6 +156,9 @@ function onStart(isFirstStart)
         eHist = {["n"] = 0}
         MissionEvent(1)                         -- initial event / start screen
     end
+
+    rttr:GetWorld():SetComputerBarrier(10, 57, 73)
+    rttr:GetWorld():SetComputerBarrier(10, 39, 29)
 end
 
 function getAllowedChanges()
@@ -148,9 +167,11 @@ function getAllowedChanges()
         ["ownNation"]   = false,
         ["ownColor"]    = false,
         ["ownTeam"]     = false,
-        ["aiNation"]    = false, 
+        ["ownPortrait"] = false,
+        ["aiNation"]    = false,
         ["aiColor"]     = false,
-        ["aiTeam"]      = false
+        ["aiTeam"]      = false,
+        ["aiPortrait"]  = false
     }
 end
 
@@ -181,30 +202,6 @@ function addPlayerBld(p, onLoad)
     rttr:GetPlayer(p):DisableBuilding(BLD_HARBORBUILDING, false)
 
     if(p == 1) then
-        rttr:GetPlayer(p):SetRestrictedArea(
-            nil, nil,       -- enable the whole map
-                0,   0,
-                0, 127,
-                127, 127,
-                127,   0,
-            nil, nil,       -- R=10,    X=57,   Y=73    ->  R=10,   X=58,   Y=68    (Yellow HQ!)
-                 62,  76,
-                 67,  86,
-                 62,  96,
-                 52,  96,
-                 47,  86,
-                 52,  76,
-                 62,  76,
-            nil, nil,      -- northern pass
-                 39,  28,
-                 40,  28,
-                 40,  29,
-                 40,  30,
-                 39,  30,
-                 38,  29,
-                 39,  28,
-            nil, nil        -- ignore R=10, X=39,   Y=29
-        )
         if onLoad then return end
 
         rttr:GetPlayer(p):AIConstructionOrder(57, 73, BLD_FORTRESS)
@@ -444,10 +441,6 @@ function onOccupied(p, x, y)
 
     if( (x == 75) and (y == 40) ) then MissionEvent(99)
     end
-
-    if(not rttr:GetPlayer(1):IsInRestrictedArea(x, y)) then 
-        MissionEvent(98) -- for lifting restrictions
-    end
 end
 
 function onExplored(p, x, y, o)
@@ -464,11 +457,7 @@ function MissionEvent(e, onLoad)
     end
 
     -- call side effects for active events, check "eState[e] == 1" for multiple call events!
-    if(e == 98) then
-        rttr:GetPlayer(1):SetRestrictedArea()
-        rttr:GetPlayer(2):SetRestrictedArea()
-        
-    elseif(e == 99) then
+    if(e == 99) then
         -- TODO: EnableNextMissions()
         -- Show opened arc
         rttr:GetWorld():AddStaticObject(75, 40, 561, 0xFFFF, 2)

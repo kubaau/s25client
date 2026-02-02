@@ -16,6 +16,7 @@
 #include "gameTypes/MapCoordinates.h"
 #include "gameTypes/PactTypes.h"
 #include "gameTypes/SettingsTypes.h"
+#include "gameTypes/TempleProductionMode.h"
 #include "s25util/Serializer.h"
 #include <cstdint>
 #include <utility>
@@ -133,7 +134,7 @@ class ChangeDistribution : public GameCommand
 
 protected:
     ChangeDistribution(const Distributions& data) : GameCommand(GCType::ChangeDistribution), data(data) {}
-    ChangeDistribution(Serializer& ser) : GameCommand(GCType::ChangeDistribution) { helpers::popContainer(ser, data); }
+    ChangeDistribution(Deserializer& ser);
 
 public:
     void Serialize(Serializer& ser) const override
@@ -446,7 +447,7 @@ class SetInventorySetting : public Coords
 
 protected:
     SetInventorySetting(const MapPoint pt, boost_variant2<GoodType, Job> what, const InventorySetting state)
-        : Coords(GCType::SetInventorySetting, pt), what(std::move(what)), state(state)
+        : Coords(GCType::SetInventorySetting, pt), what(what), state(state)
     {}
     SetInventorySetting(Serializer& ser) : Coords(GCType::SetInventorySetting, ser)
 
@@ -684,6 +685,29 @@ public:
     }
 };
 
+/// Switch output of temple
+class SetTempleProductionMode : public Coords
+{
+    GC_FRIEND_DECL;
+    const ProductionMode productionMode;
+
+protected:
+    SetTempleProductionMode(const MapPoint pt, ProductionMode productionMode)
+        : Coords(GCType::SetTempleProductionMode, pt), productionMode(productionMode)
+    {}
+    SetTempleProductionMode(Serializer& ser)
+        : Coords(GCType::SetTempleProductionMode, ser), productionMode(helpers::popEnum<ProductionMode>(ser))
+    {}
+
+public:
+    void Execute(GameWorld& world, uint8_t playerId) override;
+    void Serialize(Serializer& ser) const override
+    {
+        Coords::Serialize(ser);
+        helpers::pushEnum<uint8_t>(ser, productionMode);
+    }
+};
+
 /// Expedition starten
 class StartStopExpedition : public Coords
 {
@@ -782,7 +806,7 @@ class TradeOverLand : public Coords
 protected:
     /// Note: Can only trade wares or figures!
     TradeOverLand(const MapPoint pt, boost_variant2<GoodType, Job> what, const uint32_t count)
-        : Coords(GCType::Trade, pt), what(std::move(what)), count(count)
+        : Coords(GCType::Trade, pt), what(what), count(count)
     {}
     TradeOverLand(Serializer& ser) : Coords(GCType::Trade, ser)
     {

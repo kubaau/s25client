@@ -74,6 +74,8 @@ public:
 
     /// Convert a path into a resource id. Throws if the file name is invalid
     static ResourceId make(const boost::filesystem::path& filepath);
+    /// Same but allows paths with unresolved folders
+    static ResourceId fromPath(const std::string& filepath);
     /// Create a resource id from a string directly. Throws if the name is invalid
     static ResourceId make(const std::string& name);
     /// Can also create a copy of an existing resource id
@@ -91,7 +93,7 @@ constexpr bool ResourceId::isValid(const char* name, unsigned length)
     for(int i = 0; i < iLen; i++)
     {
         const char c = name[i];
-        if(!(('0' <= c && c <= '9') || ('a' <= c && c <= 'z') || c == '_'))
+        if(('0' > c || c > '9') && ('a' > c || c > 'z') && c != '_')
             return false;
     }
     return true;

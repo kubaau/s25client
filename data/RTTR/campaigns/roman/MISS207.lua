@@ -21,7 +21,7 @@ function isMapPreviewEnabled()
     return false
 end
 
-local requiredFeature = 4
+local requiredFeature = 6
 function checkVersion()
     local featureLevel = rttr:GetFeatureLevel()
     if(featureLevel < requiredFeature) then
@@ -30,7 +30,7 @@ function checkVersion()
 end
 -------------------------------- mission events and texts --------------------
 -- Message-Window (mission statement and hints): 52 chars wide
-eIdx = {1, 98, 99}
+eIdx = {1, 99}
 
 rttr:RegisterTranslations(
 {
@@ -42,7 +42,7 @@ rttr:RegisterTranslations(
         msgh1   = 'Vyhledej bránu. Zvaž vhodné příležitosti k vybudování přístavu.',
 
         msg99   = 'Našli jsme bránu a obsadili ji. Kdy dorazíme do cíle?',
-        msg99   = 'Dokončil jsi tuto misi. Další kapitola na tebe čeká ...'
+        msgh99  = 'Dokončil jsi tuto misi. Další kapitola na tebe čeká ...'
     },
     de =
     {
@@ -52,7 +52,7 @@ rttr:RegisterTranslations(
         msgh1   = 'Suchen Sie nach einem Tor. Achten Sie auf eventuell\nvorhandene Möglichkeiten zum Hafenbau.',
 
         msg99   = 'Wir haben das Tor gefunden und besetzt. Wann werden\nwir unser Ziel wohl erreichen?',
-        msg99   = 'Sie haben diese Mission erfüllt. Das nächste Kapitel\nwartet auf Sie...'
+        msgh99  = 'Sie haben diese Mission erfüllt. Das nächste Kapitel\nwartet auf Sie...'
     },
     en =
     { 
@@ -62,7 +62,17 @@ rttr:RegisterTranslations(
         msgh1   = 'Search for a gateway. Consider opportunities to build\na harbor.',
 
         msg99   = 'We have found the gateway and occupied it. When will\nwe reach our destination?',
-        msg99   = 'You have completed this mission. The next Chapter\nawaits you...'
+        msgh99   = 'You have completed this mission. The next Chapter\nawaits you...'
+    },
+    pl =
+    { 
+        Diary   = 'Dziennik',
+
+        msg1    = 'Zwiadowcy powiedzieli mi o potężnym wrogu na zachodzie.\n\nMusimy spróbować zostać tutaj tak długo, jak to możliwe.\n\nW nagłym wypadku możemy zawsze uciec na wschód lub morzem...',
+        msgh1   = 'Rozpocznij poszukiwania wrót.\nRozważ możliwości budowy portu.',
+
+        msg99   = 'Znaleźliśmy wrota i zajęliśmy je.\n\nKiedy dotrzemy do naszego celu?',
+        msgh99  = 'Ukończyłeś tę misję.\nNastępny rozdział czeka na ciebie...'
     }
 })
 
@@ -96,17 +106,20 @@ function onSettingsReady()
 
     rttr:GetPlayer(0):SetNation(NAT_ROMANS)     -- nation
     rttr:GetPlayer(0):SetColor(0)               -- 0:blue, 1:read, 2:yellow, 
+    rttr:GetPlayer(0):SetPortrait(0)
 
     rttr:GetPlayer(1):SetAI(3)                  -- hard AI
     rttr:GetPlayer(1):SetNation(NAT_AFRICANS)   -- nation
     rttr:GetPlayer(1):SetColor(1)               -- yellow
     rttr:GetPlayer(1):SetName('Mnga Tscha')     -- Enemy Name
+    rttr:GetPlayer(1):SetPortrait(11)
     rttr:GetPlayer(1):SetTeam(TM_TEAM1)
 
     rttr:GetPlayer(2):SetAI(3)                  -- hard AI
     rttr:GetPlayer(2):SetNation(NAT_AFRICANS)   -- nation
     rttr:GetPlayer(2):SetColor(2)               -- red
     rttr:GetPlayer(2):SetName('Todo')           -- Enemy Name
+    rttr:GetPlayer(2):SetPortrait(10)
     rttr:GetPlayer(2):SetTeam(TM_TEAM1)
 end
 
@@ -131,6 +144,11 @@ function onStart(isFirstStart)
         eHist = {["n"] = 0}
         MissionEvent(1)                         -- initial event / start screen
     end
+
+    rttr:GetWorld():SetComputerBarrier(10, 41, 122)
+    rttr:GetWorld():SetComputerBarrier(10, 72, 111)
+    rttr:GetWorld():SetComputerBarrier(15, 72, 97)
+    rttr:GetWorld():SetComputerBarrier(10, 19, 100)
 end
 
 function getAllowedChanges()
@@ -139,9 +157,11 @@ function getAllowedChanges()
         ["ownNation"]   = false,
         ["ownColor"]    = false,
         ["ownTeam"]     = false,
-        ["aiNation"]    = false, 
+        ["ownPortrait"] = false,
+        ["aiNation"]    = false,
         ["aiColor"]     = false,
-        ["aiTeam"]      = false
+        ["aiTeam"]      = false,
+        ["aiPortrait"]  = false
     }
 end
 
@@ -172,23 +192,7 @@ function addPlayerBld(p, onLoad)
     if not(p == 0) then
         rttr:GetPlayer(p):DisableBuilding(BLD_SHIPYARD, false)
         rttr:GetPlayer(p):DisableBuilding(BLD_HARBORBUILDING, false)
-        rttr:GetPlayer(p):SetRestrictedArea(
-            nil, nil,       -- enable the whole map
-                0,   0,
-                0, 143,
-                143, 143,
-                143,   0,
-            nil, nil,       -- R=15,    X=72,   Y=97    (change R -> 10, HQ!)
-                77,  87,
-                82,  97,
-                77, 107,
-                67, 107,
-                62,  97,
-                67,  87,
-                77,  87,
-            nil, nil        -- ignore   R=10,   X=41,   Y=122
-        )                   --          R=10,   X=72,   Y=111
-    end                     --          R=10,   X=19,   Y=100
+    end
 end
 
 -------------------------------- set resources --------------------------------
@@ -422,10 +426,6 @@ function onOccupied(p, x, y)
 
     if( (x == 11) and (y == 125) ) then MissionEvent(99)
     end
-    
-    if(not rttr:GetPlayer(1):IsInRestrictedArea(x, y)) then 
-        MissionEvent(98) -- for lifting restrictions
-    end
 end
 
 -- execute mission events, e == 1 is initial event, e == 99 is final event
@@ -436,11 +436,7 @@ function MissionEvent(e, onLoad)
     end
 
     -- call side effects for active events, check "eState[e] == 1" for multiple call events!
-    if(e == 98) then
-        rttr:GetPlayer(1):SetRestrictedArea()
-        rttr:GetPlayer(2):SetRestrictedArea()
-
-    elseif(e == 99) then
+    if(e == 99) then
         -- TODO: EnableNextMissions()
         -- Show opened arc
         rttr:GetWorld():AddStaticObject(11, 125, 561, 0xFFFF, 2)

@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Settlers Freaks (sf-team at siedler25.org)
+// Copyright (C) 2024 - 2025  Settlers Freaks (sf-team at siedler25.org)
 //
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -7,6 +7,7 @@
 #include "DrawPoint.h"
 #include "Window.h"
 #include <gameData/SelectionMapInputData.h>
+#include <optional>
 
 class glArchivItem_Bitmap;
 namespace libsiedler2 {
@@ -28,13 +29,12 @@ public:
 
     void setMissionsStatus(const std::vector<MissionStatus>& status);
     void setSelection(size_t select);
-    int getCurrentSelection() const;
+    std::optional<unsigned> getSelection() const;
     void setPreview(bool previewOnly);
 
     bool Msg_LeftUp(const MouseCoords& mc) override;
 
 protected:
-    bool IsMouseOver(const Position& mousePos) const;
     void Draw_() override;
 
     void updateEnabledMask();

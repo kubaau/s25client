@@ -16,7 +16,7 @@ unsigned LuaInterfaceGameBase::GetVersion()
 
 unsigned LuaInterfaceGameBase::GetFeatureLevel()
 {
-    return 4;
+    return 6;
 }
 
 LuaInterfaceGameBase::LuaInterfaceGameBase(const ILocalGameState& localGameState) : localGameState(localGameState)

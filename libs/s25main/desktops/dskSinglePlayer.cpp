@@ -10,7 +10,6 @@
 #include "Settings.h"
 #include "WindowManager.h"
 #include "controls/ctrlButton.h"
-#include "dskCampaignMissionMapSelection.h"
 #include "dskCampaignMissionSelection.h"
 #include "dskCampaignSelection.h"
 #include "dskMainMenu.h"
@@ -20,8 +19,10 @@
 #include "ingameWindows/iwMsgbox.h"
 #include "ingameWindows/iwPlayReplay.h"
 #include "ingameWindows/iwSave.h"
+#include "lua/CampaignDataLoader.h"
 #include "network/CreateServerInfo.h"
 #include "network/GameClient.h"
+#include "gameData/CampaignDescription.h"
 
 namespace bfs = boost::filesystem;
 
@@ -52,6 +53,16 @@ dskSinglePlayer::dskSinglePlayer()
     AddTextButton(8, DrawPoint(115, 390), Extent(220, 22), TextureColor::Red1, _("Back"), NormalFont);
     AddImage(11, DrawPoint(20, 20), LOADER.GetImageN("logo", 0));
 }
+
+namespace {
+auto SwitchToBuiltinCampaign(const std::string& campaignID)
+{
+    CampaignDescription desc;
+    if(CampaignDataLoader{desc, bfs::path{RTTRCONFIG.ExpandPath(s25::folders::campaignsBuiltin)} / campaignID}.Load())
+        WINDOWMANAGER.Switch(std::make_unique<dskCampaignMissionSelection>(createLocalGameInfo(_("Campaign")), desc,
+                                                                           CreatedFrom::SinglePlayer));
+}
+} // namespace
 
 void dskSinglePlayer::Msg_ButtonClick(const unsigned ctrl_id)
 {
@@ -130,16 +141,12 @@ void dskSinglePlayer::Msg_ButtonClick(const unsigned ctrl_id)
         break;
         case 9: // Roman campaign
         {
-            WINDOWMANAGER.Switch(std::make_unique<dskCampaignMissionSelection>(
-              createLocalGameInfo(_("Campaign")),
-              bfs::path{RTTRCONFIG.ExpandPath(s25::folders::campaignsBuiltin)} / "roman", CreatedFrom::SinglePlayer));
+            SwitchToBuiltinCampaign("roman");
         }
         break;
         case 10: // World campaign
         {
-            WINDOWMANAGER.Switch(std::make_unique<dskCampaignMissionMapSelection>(
-              createLocalGameInfo(_("Campaign")),
-              bfs::path{RTTRCONFIG.ExpandPath(s25::folders::campaignsBuiltin)} / "world", CreatedFrom::SinglePlayer));
+            SwitchToBuiltinCampaign("world");
         }
         break;
     }

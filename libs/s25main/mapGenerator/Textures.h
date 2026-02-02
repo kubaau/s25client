@@ -17,7 +17,7 @@ struct TexturePair
     DescIdx<TerrainDesc> rsu;
     DescIdx<TerrainDesc> lsd;
 
-    TexturePair() : rsu(DescIdx<TerrainDesc>::INVALID), lsd(DescIdx<TerrainDesc>::INVALID) {}
+    TexturePair() = default;
     TexturePair(DescIdx<TerrainDesc> texture) : rsu(texture), lsd(texture) {}
 };
 
@@ -27,27 +27,20 @@ private:
     const WorldDescription& worldDesc_;
     const DescIdx<LandscapeDesc> landscape_;
 
-    std::vector<DescIdx<TerrainDesc>> terrains_;
+    const std::vector<DescIdx<TerrainDesc>> terrains_;
 
 public:
     TextureOperator(const WorldDescription& worldDesc, const DescIdx<LandscapeDesc> landscape)
-        : worldDesc_(worldDesc), landscape_(landscape)
-    {
-        for(DescIdx<TerrainDesc> t(0); t.value < worldDesc_.terrain.size(); t.value++)
-        {
-            if(worldDesc_.get(t).landscape == landscape)
-            {
-                terrains_.push_back(t);
-            }
-        }
-    }
+        : worldDesc_(worldDesc), landscape_(landscape),
+          terrains_(worldDesc_.terrain.findAll([landscape](const TerrainDesc& t) { return t.landscape == landscape; }))
+    {}
 
-    inline uint8_t GetTextureId(DescIdx<TerrainDesc> texture) const { return worldDesc_.get(texture).s2Id; }
+    uint8_t GetTextureId(DescIdx<TerrainDesc> texture) const { return worldDesc_.get(texture).s2Id; }
 
-    inline uint8_t GetLandscapeId() const { return worldDesc_.get(landscape_).s2Id; }
+    uint8_t GetLandscapeId() const { return worldDesc_.get(landscape_).s2Id; }
 
     template<class T_Predicate>
-    inline DescIdx<TerrainDesc> Find(T_Predicate predicate) const
+    DescIdx<TerrainDesc> Find(T_Predicate predicate) const
     {
         for(auto texture : terrains_)
         {
@@ -61,7 +54,7 @@ public:
     }
 
     template<class T_Predicate>
-    inline std::vector<DescIdx<TerrainDesc>> FindAll(T_Predicate predicate) const
+    std::vector<DescIdx<TerrainDesc>> FindAll(T_Predicate predicate) const
     {
         auto condition = [&predicate, this](const auto& texture) { return predicate(worldDesc_.get(texture)); };
 
@@ -72,7 +65,7 @@ public:
     }
 
     template<class T_SortBy>
-    inline void Sort(std::vector<DescIdx<TerrainDesc>>& textures, T_SortBy sortBy) const
+    void Sort(std::vector<DescIdx<TerrainDesc>>& textures, T_SortBy sortBy) const
     {
         auto lessThan = [this, &sortBy](const auto& t1, const auto& t2) {
             return sortBy(worldDesc_.get(t1)) < sortBy(worldDesc_.get(t2));
@@ -82,7 +75,7 @@ public:
     }
 
     template<class T_Predicate>
-    inline bool Check(DescIdx<TerrainDesc> texture, T_Predicate predicate) const
+    bool Check(DescIdx<TerrainDesc> texture, T_Predicate predicate) const
     {
         return predicate(worldDesc_.get(texture));
     }
